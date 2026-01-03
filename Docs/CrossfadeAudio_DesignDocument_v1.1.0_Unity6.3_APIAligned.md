@@ -119,7 +119,74 @@ flowchart TB
     Core --> Foundation
 ```
 
-### 3.2 SAP コア概念（設計で依存するポイント）
+### 3.2 ディレクトリ構成
+
+```
+Assets/
+└── CrossfadeAudio/
+    ├── Runtime/
+    │   ├── Core/
+    │   │   ├── CrossfadeAudio.Core.asmdef              ★ Addressables 参照なし（本体）
+    │   │   │
+    │   │   ├── Foundation/
+    │   │   │   ├── SapCompat.cs                        ★ 継続（SAP差分隔離）
+    │   │   │   ├── ClipRequirements.cs                 ★ 継続（GetData要件ガード）
+    │   │   │   ├── NativeBufferPool.cs                 ★ 追加（Control側のみ）
+    │   │   │   ├── Resampling/
+    │   │   │   │   ├── ResampleMode.cs                 ★ 追加
+    │   │   │   │   ├── ResampleQuality.cs              ★ 追加
+    │   │   │   │   └── Resampler.cs                    ★ 追加
+    │   │   │   └── (optional) Diagnostics/             ★ 任意（ログ/検証フラグなど）
+    │   │   │
+    │   │   ├── Types/                                  ★ “Core/Core” の二重を解消
+    │   │   │   ├── CrossfadeCurve.cs
+    │   │   │   ├── CrossfadeCommand.cs
+    │   │   │   ├── CrossfadeRealtimeParams.cs
+    │   │   │   ├── PageReady.cs                        ★ 追加（Paging/Stream用）
+    │   │   │   └── IPcmPageProvider.cs                 ★ 追加（外部PCM供給）
+    │   │   │
+    │   │   ├── Generators/
+    │   │   │   ├── Clip/
+    │   │   │   │   ├── ClipGeneratorAsset.cs
+    │   │   │   │   ├── ClipControl.cs
+    │   │   │   │   └── ClipRealtime.cs
+    │   │   │   │
+    │   │   │   ├── Crossfade/
+    │   │   │   │   ├── CrossfadeGeneratorAsset.cs
+    │   │   │   │   ├── CrossfadeControl.cs
+    │   │   │   │   └── CrossfadeRealtime.cs
+    │   │   │   │
+    │   │   │   ├── PagedClip/                          ★ 追加（AudioClipページング）
+    │   │   │   │   ├── PagedClipGeneratorAsset.cs
+    │   │   │   │   ├── PagedClipControl.cs
+    │   │   │   │   └── PagedClipRealtime.cs
+    │   │   │   │
+    │   │   │   └── PcmStream/                          ★ 追加（外部PCMストリーム）
+    │   │   │       ├── PcmStreamGeneratorAsset.cs
+    │   │   │       ├── PcmStreamControl.cs
+    │   │   │       └── PcmStreamRealtime.cs
+    │   │   │
+    │   │   ├── Integration/
+    │   │   │   └── CrossfadeHandle.cs                  ★ 継続
+    │   │   │
+    │   │   └── Components/
+    │   │       └── CrossfadePlayer.cs                  ★ 継続（薄いMonoBehaviour）
+    │   │
+    │   └── README.md
+    │
+    ├── Addressables/                                   ★ 任意（別 asmdef / 依存分離）
+    │   ├── CrossfadeAudio.Addressables.asmdef
+    │   ├── IPreloadableAudioGenerator.cs
+    │   └── AddressableClipGeneratorAsset.cs
+    │
+    ├── Tests/                                          ★ 任意
+    └── Samples~/                                       ★ 任意（配布するなら）
+        ├── ClipCrossfade/
+        ├── PagedClipCrossfade/
+        └── PcmStreamCrossfade/
+```
+
+### 3.3 SAP コア概念（設計で依存するポイント）
 
 * `ChannelBuffer` は channels×frames の 2D ビューとしてサンプルデータを扱う（内部レイアウト抽象）。 ([Unity ドキュメント][5])
 * Realtime は allocation-free / exception-free を前提に実装する（公式例の前提）。 ([Unity ドキュメント][6])
