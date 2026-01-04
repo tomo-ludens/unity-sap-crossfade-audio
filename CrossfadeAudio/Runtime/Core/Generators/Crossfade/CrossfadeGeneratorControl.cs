@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 using Unity.Collections;
 using Unity.Mathematics;
+using UnityEngine;
 using UnityEngine.Audio;
 using static UnityEngine.Audio.ProcessorInstance;
 using TomoLudens.CrossfadeAudio.Runtime.Core.Foundation;
@@ -21,7 +22,6 @@ namespace TomoLudens.CrossfadeAudio.Runtime.Core.Generators.Crossfade
             out GeneratorInstance.Setup setup,
             ref GeneratorInstance.Properties properties)
         {
-            // 公式サンプルと同様：ホストの format に合わせる :contentReference[oaicite:3]{index=3}
             setup = new GeneratorInstance.Setup(
                 speakerMode: format.speakerMode,
                 sampleRate: format.sampleRate);
@@ -35,41 +35,21 @@ namespace TomoLudens.CrossfadeAudio.Runtime.Core.Generators.Crossfade
             realtime.BufferChannelCount = outputChannels;
             realtime.SampleRate = format.sampleRate;
 
-            // 子の Configure（親と同じ format を提案）
-            realtime.ChildAFormatCompatible = false;
-            if (!realtime.ChildA.Equals(other: default))
-            {
-                var nestedFormatA = format;
-                context.Configure(generatorInstance: realtime.ChildA, format: nestedFormatA);
+            // 重要：ここで context.Configure(child, ...) を呼ばない（ADTM例外の原因）
+            realtime.ChildAFormatCompatible = IsChildFormatCompatible(
+                context: context,
+                child: realtime.ChildA,
+                expectedSpeakerMode: format.speakerMode,
+                expectedSampleRate: format.sampleRate);
 
-                var cfgA = context.GetConfiguration(generatorInstance: realtime.ChildA);
-                realtime.ChildAFormatCompatible = cfgA.setup.sampleRate == format.sampleRate && cfgA.setup.speakerMode == format.speakerMode;
-            }
-            else
-            {
-                realtime.ChildAFormatCompatible = false;
-            }
+            realtime.ChildBFormatCompatible = IsChildFormatCompatible(
+                context: context,
+                child: realtime.ChildB,
+                expectedSpeakerMode: format.speakerMode,
+                expectedSampleRate: format.sampleRate);
 
-            realtime.ChildBFormatCompatible = false;
-            if (!realtime.ChildB.Equals(other: default))
-            {
-                var nestedFormatB = format;
-                context.Configure(generatorInstance: realtime.ChildB, format: nestedFormatB);
+            // バッファは CreateInstance で事前割り当て済み（Job コンテキストでは Persistent 割り当て不可のため）
 
-                var cfgB = context.GetConfiguration(generatorInstance: realtime.ChildB);
-                realtime.ChildBFormatCompatible = cfgB.setup.sampleRate == format.sampleRate && cfgB.setup.speakerMode == format.speakerMode;
-            }
-            else
-            {
-                realtime.ChildBFormatCompatible = false;
-            }
-
-            // 作業バッファ確保（最大想定：format.bufferFrameCount）
-            int requiredFloats = format.bufferFrameCount * outputChannels;
-            ResizeWorkBufferIfNeeded(requiredFloats: requiredFloats, buffer: ref realtime.BufferDataA);
-            ResizeWorkBufferIfNeeded(requiredFloats: requiredFloats, buffer: ref realtime.BufferDataB);
-
-            // 初期値
             float initialPos = math.clamp(valueToClamp: InitialPosition01, lowerBound: 0.0f, upperBound: 1.0f);
             realtime.CurrentCurve = InitialCurve;
             realtime.FadePosition01 = initialPos;
@@ -118,21 +98,27 @@ namespace TomoLudens.CrossfadeAudio.Runtime.Core.Generators.Crossfade
         }
 
         [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
-        private static void ResizeWorkBufferIfNeeded(int requiredFloats, ref NativeArray<float> buffer)
+        private static bool IsChildFormatCompatible(
+            ControlContext context,
+            GeneratorInstance child,
+            AudioSpeakerMode expectedSpeakerMode,
+            float expectedSampleRate)
         {
-            if (requiredFloats <= 0)
+            if (child.Equals(other: default))
             {
-                NativeBufferPool.Return(array: ref buffer);
-                return;
+                return false;
             }
 
-            if (buffer.IsCreated && buffer.Length == requiredFloats)
+            if (!context.Exists(processorInstance: child))
             {
-                return;
+                return false;
             }
 
-            NativeBufferPool.Return(array: ref buffer);
-            buffer = NativeBufferPool.Rent(length: requiredFloats);
+            var cfg = context.GetConfiguration(generatorInstance: child);
+
+            return cfg.setup.speakerMode == expectedSpeakerMode &&
+                   Mathf.Approximately(a: cfg.setup.sampleRate, b: expectedSampleRate);
         }
+
     }
 }

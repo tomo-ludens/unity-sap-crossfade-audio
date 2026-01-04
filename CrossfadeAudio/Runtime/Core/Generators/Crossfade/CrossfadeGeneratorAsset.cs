@@ -2,6 +2,7 @@ using Unity.IntegerTime;
 using UnityEngine;
 using UnityEngine.Audio;
 using static UnityEngine.Audio.ProcessorInstance;
+using TomoLudens.CrossfadeAudio.Runtime.Core.Foundation;
 using TomoLudens.CrossfadeAudio.Runtime.Core.Types;
 
 namespace TomoLudens.CrossfadeAudio.Runtime.Core.Generators.Crossfade
@@ -11,7 +12,6 @@ namespace TomoLudens.CrossfadeAudio.Runtime.Core.Generators.Crossfade
     {
         [Header(header: "Sources (must implement IAudioGenerator)")]
         public ScriptableObject sourceA;
-
         public ScriptableObject sourceB;
 
         [Header(header: "Initial State")]
@@ -32,51 +32,9 @@ namespace TomoLudens.CrossfadeAudio.Runtime.Core.Generators.Crossfade
             AudioFormat? nestedConfiguration,
             CreationParameters creationParameters)
         {
-            IAudioGenerator generatorA = sourceA as IAudioGenerator;
-            IAudioGenerator generatorB = sourceB as IAudioGenerator;
-
-            GeneratorInstance childA = default;
-            GeneratorInstance childB = default;
-
-            if (generatorA != null)
-            {
-                childA = generatorA.CreateInstance(
-                    context: context,
-                    nestedFormat: nestedConfiguration,
-                    creationParameters: creationParameters);
-            }
-
-            if (generatorB != null)
-            {
-                childB = generatorB.CreateInstance(
-                    context: context,
-                    nestedFormat: nestedConfiguration,
-                    creationParameters: creationParameters);
-            }
+            var realtime = new CrossfadeGeneratorRealtime();
 
             float pos = Mathf.Clamp01(value: initialPosition01);
-
-            var realtime = new CrossfadeGeneratorRealtime
-            {
-                ChildA = childA,
-                ChildB = childB,
-
-                BufferDataA = default,
-                BufferDataB = default,
-                BufferChannelCount = 0,
-
-                FadePosition01 = pos,
-                TargetPosition01 = pos,
-                FadeIncrementPerFrame = 0.0f,
-                CurrentCurve = initialCurve,
-                SampleRate = 0.0f,
-
-                ChildAFinished = false,
-                ChildBFinished = false,
-
-                ChildAFormatCompatible = true,
-                ChildBFormatCompatible = true
-            };
 
             var control = new CrossfadeGeneratorControl
             {
@@ -84,6 +42,50 @@ namespace TomoLudens.CrossfadeAudio.Runtime.Core.Generators.Crossfade
                 InitialCurve = initialCurve,
                 DefaultFadeSeconds = defaultFadeSeconds
             };
+
+            // 子へ渡すフォーマット（親がネストされているならそれを優先、そうでなければ現行 AudioSettings）
+            AudioFormat childNestedFormat = nestedConfiguration ?? new AudioFormat(config: AudioSettings.GetConfiguration());
+
+            if (sourceA is IAudioGenerator generatorA)
+            {
+                realtime.ChildA = generatorA.CreateInstance(
+                    context: context,
+                    nestedFormat: childNestedFormat,
+                    creationParameters: creationParameters);
+            }
+            else
+            {
+                realtime.ChildA = default;
+            }
+
+            if (sourceB is IAudioGenerator generatorB)
+            {
+                realtime.ChildB = generatorB.CreateInstance(
+                    context: context,
+                    nestedFormat: childNestedFormat,
+                    creationParameters: creationParameters);
+            }
+            else
+            {
+                realtime.ChildB = default;
+            }
+
+            // バッファを事前割り当て（CreateInstance はメインスレッドで実行されるため Persistent が使用可能）
+            // Configure は Job コンテキストで実行されるため、そこでは Temp しか使用できない
+            int bufferFrameCount = childNestedFormat.bufferFrameCount > 0
+                ? childNestedFormat.bufferFrameCount
+                : AudioSettings.GetConfiguration().dspBufferSize;
+            int channels = childNestedFormat.channelCount > 0
+                ? childNestedFormat.channelCount
+                : 2;
+            int requiredFloats = bufferFrameCount * channels;
+
+            if (requiredFloats > 0)
+            {
+                realtime.BufferDataA = NativeBufferPool.Rent(length: requiredFloats);
+                realtime.BufferDataB = NativeBufferPool.Rent(length: requiredFloats);
+                realtime.BufferChannelCount = channels;
+            }
 
             return context.AllocateGenerator(
                 realtimeState: realtime,
