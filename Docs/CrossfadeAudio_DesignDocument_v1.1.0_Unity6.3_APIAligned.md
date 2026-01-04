@@ -123,67 +123,70 @@ flowchart TB
 
 ```
 Assets/
-└── CrossfadeAudio/
-    ├── Runtime/
-    │   ├── Core/
-    │   │   ├── CrossfadeAudio.Core.asmdef              ★ Addressables 参照なし（本体）
-    │   │   │
-    │   │   ├── Foundation/
-    │   │   │   ├── SapCompat.cs                        ★ 継続（SAP差分隔離）
-    │   │   │   ├── ClipRequirements.cs                 ★ 継続（GetData要件ガード）
-    │   │   │   ├── NativeBufferPool.cs                 ★ 追加（Control側のみ）
-    │   │   │   ├── Resampling/
-    │   │   │   │   ├── ResampleMode.cs                 ★ 追加
-    │   │   │   │   ├── ResampleQuality.cs              ★ 追加
-    │   │   │   │   └── Resampler.cs                    ★ 追加
-    │   │   │   └── (optional) Diagnostics/             ★ 任意（ログ/検証フラグなど）
-    │   │   │
-    │   │   ├── Types/                                  ★ “Core/Core” の二重を解消
-    │   │   │   ├── CrossfadeCurve.cs
-    │   │   │   ├── CrossfadeCommand.cs
-    │   │   │   ├── CrossfadeRealtimeParams.cs
-    │   │   │   ├── PageReady.cs                        ★ 追加（Paging/Stream用）
-    │   │   │   └── IPcmPageProvider.cs                 ★ 追加（外部PCM供給）
-    │   │   │
-    │   │   ├── Generators/
-    │   │   │   ├── Clip/
-    │   │   │   │   ├── ClipGeneratorAsset.cs
-    │   │   │   │   ├── ClipControl.cs
-    │   │   │   │   └── ClipRealtime.cs
-    │   │   │   │
-    │   │   │   ├── Crossfade/
-    │   │   │   │   ├── CrossfadeGeneratorAsset.cs
-    │   │   │   │   ├── CrossfadeControl.cs
-    │   │   │   │   └── CrossfadeRealtime.cs
-    │   │   │   │
-    │   │   │   ├── PagedClip/                          ★ 追加（AudioClipページング）
-    │   │   │   │   ├── PagedClipGeneratorAsset.cs
-    │   │   │   │   ├── PagedClipControl.cs
-    │   │   │   │   └── PagedClipRealtime.cs
-    │   │   │   │
-    │   │   │   └── PcmStream/                          ★ 追加（外部PCMストリーム）
-    │   │   │       ├── PcmStreamGeneratorAsset.cs
-    │   │   │       ├── PcmStreamControl.cs
-    │   │   │       └── PcmStreamRealtime.cs
-    │   │   │
-    │   │   ├── Integration/
-    │   │   │   └── CrossfadeHandle.cs                  ★ 継続
-    │   │   │
-    │   │   └── Components/
-    │   │       └── CrossfadePlayer.cs                  ★ 継続（薄いMonoBehaviour）
-    │   │
-    │   └── README.md
-    │
-    ├── Addressables/                                   ★ 任意（別 asmdef / 依存分離）
-    │   ├── CrossfadeAudio.Addressables.asmdef
-    │   ├── IPreloadableAudioGenerator.cs
-    │   └── AddressableClipGeneratorAsset.cs
-    │
-    ├── Tests/                                          ★ 任意
-    └── Samples~/                                       ★ 任意（配布するなら）
-        ├── ClipCrossfade/
-        ├── PagedClipCrossfade/
-        └── PcmStreamCrossfade/
+└── Plugins/
+    └── unity-sap-crossfade-audio/
+        ├── CrossfadeAudio/
+        │   ├── Runtime/
+        │   │   └── Core/
+        │   │       ├── CrossfadeAudio.Core.asmdef              ★ Addressables 参照なし（本体）
+        │   │       │
+        │   │       ├── Foundation/
+        │   │       │   ├── SapCompat.cs                        ★ 継続（SAP差分隔離）
+        │   │       │   ├── ClipRequirements.cs                 ★ 継続（GetData要件ガード）
+        │   │       │   ├── NativeBufferPool.cs                 ★ 追加（Control側のみ）
+        │   │       │   ├── Resampling/
+        │   │       │   │   ├── ResampleMode.cs                 ★ 追加
+        │   │       │   │   ├── ResampleQuality.cs              ★ 追加
+        │   │       │   │   └── Resampler.cs                    ★ 追加
+        │   │       │   └── (optional) Diagnostics/             ★ 任意（ログ/検証フラグなど）
+        │   │       │
+        │   │       ├── Types/                                  ★ “Core/Core” の二重を解消
+        │   │       │   ├── CrossfadeCurve.cs
+        │   │       │   ├── CrossfadeCommand.cs
+        │   │       │   ├── CrossfadeRealtimeParams.cs
+        │   │       │   ├── PageReady.cs                        ★ 追加（Paging/Stream用）
+        │   │       │   └── IPcmPageProvider.cs                 ★ 追加（外部PCM供給）
+        │   │       │
+        │   │       ├── Generators/
+        │   │       │   ├── Clip/
+        │   │       │   │   ├── ClipGeneratorAsset.cs
+        │   │       │   │   ├── ClipControl.cs
+        │   │       │   │   └── ClipRealtime.cs
+        │   │       │   │
+        │   │       │   ├── Crossfade/
+        │   │       │   │   ├── CrossfadeGeneratorAsset.cs
+        │   │       │   │   ├── CrossfadeControl.cs
+        │   │       │   │   └── CrossfadeRealtime.cs
+        │   │       │   │
+        │   │       │   ├── PagedClip/                          ★ 追加（AudioClipページング）
+        │   │       │   │   ├── PagedClipGeneratorAsset.cs
+        │   │       │   │   ├── PagedClipControl.cs
+        │   │       │   │   └── PagedClipRealtime.cs
+        │   │       │   │
+        │   │       │   └── PcmStream/                          ★ 追加（外部PCMストリーム）
+        │   │       │       ├── PcmStreamGeneratorAsset.cs
+        │   │       │       ├── PcmStreamControl.cs
+        │   │       │       └── PcmStreamRealtime.cs
+        │   │       │
+        │   │       ├── Integration/
+        │   │       │   └── CrossfadeHandle.cs                  ★ 継続
+        │   │       │
+        │   │       └── Components/
+        │   │           └── CrossfadePlayer.cs                  ★ 継続（薄いMonoBehaviour）
+        │   │
+        │   ├── Addressables/                                   ★ 任意（別 asmdef / 依存分離）
+        │   │   ├── CrossfadeAudio.Addressables.asmdef
+        │   │   ├── IPreloadableAudioGenerator.cs
+        │   │   └── AddressableClipGeneratorAsset.cs
+        │   │
+        │   ├── Tests/                                          ★ 任意
+        │   └── Samples~/                                       ★ 任意（配布するなら）
+        │       ├── ClipCrossfade/
+        │       ├── PagedClipCrossfade/
+        │       └── PcmStreamCrossfade/
+        │
+        └── Docs/
+            └── CrossfadeAudio_DesignDocument_v1.1.0_Unity6.3_APIAligned.md
 ```
 
 ### 3.3 SAP コア概念（設計で依存するポイント）
@@ -265,7 +268,10 @@ namespace CrossfadeAudio
         public static int MaxPerSize = 8;
         public static long MaxTotalFloats = 8L * 1024L * 1024L; // 8M floats ≒ 32MB
 
-        private static long s_totalFloats;
+        // NOTE:
+        // - この値は「プールに保持している（＝Return済みで再利用可能な）総float数」を指す。
+        // - Rent/Return で増減し、単調増加しない（上限判定が恒久的に悪化しない）ことが重要。
+        private static long s_totalPooledFloats;
         private static readonly Dictionary<int, Stack<NativeArray<float>>> s_pool = new();
 
         public static NativeArray<float> Rent(int length)
@@ -275,10 +281,11 @@ namespace CrossfadeAudio
             if (s_pool.TryGetValue(length, out var stack) && stack.Count > 0)
             {
                 var arr = stack.Pop();
+                // プールから取り出したので pooled 総量を減らす
+                s_totalPooledFloats -= length;
                 return arr.IsCreated ? arr : new NativeArray<float>(length, Allocator.Persistent);
             }
 
-            s_totalFloats += length;
             return new NativeArray<float>(length, Allocator.Persistent);
         }
 
@@ -292,7 +299,8 @@ namespace CrossfadeAudio
 
             int length = array.Length;
 
-            if (s_totalFloats > MaxTotalFloats)
+            // 上限超過時は「保持しない」で即Dispose（冪等・安全側）
+            if (s_totalPooledFloats + length > MaxTotalFloats)
             {
                 array.Dispose();
                 array = default;
@@ -313,6 +321,7 @@ namespace CrossfadeAudio
             }
 
             stack.Push(array);
+            s_totalPooledFloats += length;
             array = default;
         }
 
@@ -328,7 +337,7 @@ namespace CrossfadeAudio
                 }
             }
             s_pool.Clear();
-            s_totalFloats = 0;
+            s_totalPooledFloats = 0;
         }
     }
 }
@@ -382,7 +391,8 @@ namespace CrossfadeAudio
             switch (q)
             {
                 case ResampleQuality.Nearest:
-                    return x0;
+                    // 最近傍：t<0.5 は x0、t>=0.5 は x1
+                    return (t < 0.5f) ? x0 : x1;
                 case ResampleQuality.Hermite4:
                     return Hermite4(xm1, x0, x1, x2, t);
                 default:
@@ -863,6 +873,11 @@ namespace CrossfadeAudio
 }
 ```
 
+**推奨（実装指針）**:
+* `slot` はリング再利用されるため、Control 側が先行して `slot` を再利用した場合に Realtime 側で取り違える可能性がある。
+  → 実装では `generation`（世代ID）や `sequence`（単調増加番号）を `PageReady` に含め、Realtime 側で「期待する世代の page だけ」を採用するのが安全。
+* Realtime 側で `startFrame` を順序検証に使う場合でも、ループや巻き戻しがあるため「世代ID」と併用するのが望ましい。
+
 ### 9.2 PagedClipGeneratorAsset
 
 ```csharp
@@ -1287,6 +1302,12 @@ namespace CrossfadeAudio
             }
 
             // Resampling（Pagedは任意位置アクセスを複雑化させないため簡易実装）
+            //
+            // 推奨:
+            // - resampling の位相（小数位置）は Process 呼び出し間で連続であるべき。
+            //   ここで srcPos を毎回 0 に戻すと、バッファ境界で位相がリセットされ
+            //   ジッタ/ピッチ揺れの原因になる。
+            //   → 実装では `double _srcPosFrac;` 等をフィールドで保持し、srcPos の余りを保存する。
             double step = (double)srcSampleRate / (double)dstSampleRate;
             double srcPos = 0.0;
 

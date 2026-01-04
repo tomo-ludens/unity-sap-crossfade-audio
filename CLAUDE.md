@@ -16,11 +16,19 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ```
 Assets/Plugins/unity-sap-crossfade-audio/
-├── CrossfadeAudio_DesignDocument_v1.1.0_Unity6.3_APIAligned.md  # Complete technical spec (Japanese)
-└── [Source code to be implemented here]
+├── Docs/CrossfadeAudio_DesignDocument_v1.1.0_Unity6.3_APIAligned.md  # Complete technical spec (Japanese)
+└── CrossfadeAudio/
+    ├── Runtime/Core/                    # Main library (CrossfadeAudio.Core.asmdef)
+    │   ├── Foundation/                  # SapCompat, NativeBufferPool, Resampler, ClipRequirements
+    │   ├── Types/                       # Core types and interfaces
+    │   ├── Generators/                  # AudioGenerator implementations
+    │   ├── Integration/                 # CrossfadeHandle
+    │   └── Components/                  # CrossfadePlayer MonoBehaviour
+    ├── Addressables/                    # Optional Addressables support (separate asmdef)
+    └── Tests/                           # Unit tests
 ```
 
-**Current State**: This repository contains the design document but the actual implementation has not been created yet. All code should be placed in `Assets/Plugins/unity-sap-crossfade-audio/`.
+**Current State**: Directory structure exists but implementation is not yet complete. All code should follow the design document specifications.
 
 ## Architecture Layers
 
@@ -156,7 +164,7 @@ if (handle.IsValid)
 ## Reference Documentation
 
 The complete technical specification with code samples is in:
-- `CrossfadeAudio_DesignDocument_v1.1.0_Unity6.3_APIAligned.md`
+- `Docs/CrossfadeAudio_DesignDocument_v1.1.0_Unity6.3_APIAligned.md`
 
 This document contains:
 - Full struct/class definitions for all components
