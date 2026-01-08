@@ -20,8 +20,7 @@ namespace TomoLudens.CrossfadeAudio.Runtime.Core.Generators.Crossfade
 
         public CrossfadeCurve initialCurve = CrossfadeCurve.EqualPower;
 
-        [Min(min: 0.0f)]
-        public float defaultFadeSeconds = 0.25f;
+        [Min(min: 0.0f)] private const float DefaultFadeSeconds = 0.25f;
 
         public bool isFinite => false;
         public bool isRealtime => false;
@@ -40,7 +39,7 @@ namespace TomoLudens.CrossfadeAudio.Runtime.Core.Generators.Crossfade
             {
                 InitialPosition01 = pos,
                 InitialCurve = initialCurve,
-                DefaultFadeSeconds = defaultFadeSeconds
+                DefaultFadeSeconds = DefaultFadeSeconds
             };
 
             // 子へ渡すフォーマット（親がネストされているならそれを優先、そうでなければ現行 AudioSettings）
@@ -80,18 +79,26 @@ namespace TomoLudens.CrossfadeAudio.Runtime.Core.Generators.Crossfade
                 : 2;
             int requiredFloats = bufferFrameCount * channels;
 
-            if (requiredFloats > 0)
+            if (requiredFloats <= 0)
             {
-                realtime.BufferDataA = NativeBufferPool.Rent(length: requiredFloats);
-                realtime.BufferDataB = NativeBufferPool.Rent(length: requiredFloats);
-                realtime.BufferChannelCount = channels;
+                return context.AllocateGenerator(
+                    realtimeState: realtime,
+                    controlState: control,
+                    nestedFormat: nestedConfiguration,
+                    creationParameters: creationParameters
+                );
             }
+
+            realtime.BufferDataA = NativeBufferPool.Rent(length: requiredFloats);
+            realtime.BufferDataB = NativeBufferPool.Rent(length: requiredFloats);
+            realtime.BufferChannelCount = channels;
 
             return context.AllocateGenerator(
                 realtimeState: realtime,
                 controlState: control,
                 nestedFormat: nestedConfiguration,
-                creationParameters: creationParameters);
+                creationParameters: creationParameters
+            );
         }
     }
 }

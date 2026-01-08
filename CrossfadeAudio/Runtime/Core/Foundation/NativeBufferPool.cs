@@ -9,24 +9,24 @@ namespace TomoLudens.CrossfadeAudio.Runtime.Core.Foundation
     /// </summary>
     internal static class NativeBufferPool
     {
-        public static int MaxPerSize = 8;
-        public static long MaxTotalFloats = 8L * 1024L * 1024L; // 8M floats ≒ 32MB
+        private const int MaxPerSize = 8;
+        private const long MaxTotalFloats = 8L * 1024L * 1024L; // 8M floats ≒ 32MB
 
         // NOTE:
         // - この値は「プールに保持している（＝Return済みで再利用可能な）総float数」を指す。
         // - Rent/Return で増減し、単調増加しない（上限判定が恒久的に悪化しない）ことが重要。
-        private static long s_totalPooledFloats;
-        private static readonly Dictionary<int, Stack<NativeArray<float>>> s_pool = new();
+        private static long _sTotalPooledFloats;
+        private static readonly Dictionary<int, Stack<NativeArray<float>>> SPool = new();
 
         public static NativeArray<float> Rent(int length)
         {
             if (length <= 0) return default;
 
-            if (s_pool.TryGetValue(key: length, value: out var stack) && stack.Count > 0)
+            if (SPool.TryGetValue(key: length, value: out var stack) && stack.Count > 0)
             {
                 var arr = stack.Pop();
-                s_totalPooledFloats -= length;
-                if (s_totalPooledFloats < 0) s_totalPooledFloats = 0;
+                _sTotalPooledFloats -= length;
+                if (_sTotalPooledFloats < 0) _sTotalPooledFloats = 0;
                 return arr;
             }
 
@@ -44,17 +44,17 @@ namespace TomoLudens.CrossfadeAudio.Runtime.Core.Foundation
             int length = array.Length;
 
             // 上限超過時は「保持しない」で即Dispose（冪等・安全側）
-            if (s_totalPooledFloats + length > MaxTotalFloats)
+            if (_sTotalPooledFloats + length > MaxTotalFloats)
             {
                 array.Dispose();
                 array = default;
                 return;
             }
 
-            if (!s_pool.TryGetValue(key: length, value: out var stack))
+            if (!SPool.TryGetValue(key: length, value: out var stack))
             {
                 stack = new Stack<NativeArray<float>>(capacity: MaxPerSize);
-                s_pool[key: length] = stack;
+                SPool[key: length] = stack;
             }
 
             if (stack.Count >= MaxPerSize)
@@ -65,15 +65,14 @@ namespace TomoLudens.CrossfadeAudio.Runtime.Core.Foundation
             }
 
             stack.Push(item: array);
-            s_totalPooledFloats += length;
+            _sTotalPooledFloats += length;
             array = default;
         }
 
         public static void Clear()
         {
-            foreach (var kv in s_pool)
+            foreach (var stack in SPool.Values)
             {
-                var stack = kv.Value;
                 while (stack.Count > 0)
                 {
                     var arr = stack.Pop();
@@ -81,8 +80,8 @@ namespace TomoLudens.CrossfadeAudio.Runtime.Core.Foundation
                 }
             }
 
-            s_pool.Clear();
-            s_totalPooledFloats = 0;
+            SPool.Clear();
+            _sTotalPooledFloats = 0;
         }
     }
 }
