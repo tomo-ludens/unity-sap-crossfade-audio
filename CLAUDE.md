@@ -4,173 +4,245 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**CrossfadeAudio** is a Unity 6.3+ Scriptable Audio Pipeline (SAP) library for sample-accurate crossfading between two audio sources. The library is designed for BGM transitions with zero exceptions, allocation-free realtime processing, and Burst compilation.
+CrossfadeAudio is a Unity 6.3+ Scriptable Audio Pipeline (SAP) library providing sample-accurate crossfade playback between two audio sources. Written in Japanese and English, this library focuses on BGM transitions with zero-exception, allocation-free audio processing.
 
-- **Unity Version**: 6000.3.2f1 (requires Unity 6.3+)
-- **Target API**: Unity Scriptable Audio Pipeline (SAP)
-- **Language**: C# with Burst-compiled realtime code
-- **Required Package**: com.unity.burst
-- **Optional Package**: com.unity.addressables (separate asmdef if implemented)
+**Target Unity Version**: 6.3.4f1+
+**Required Packages**: `com.unity.burst`, `com.unity.collections`, `com.unity.mathematics`
+**Optional Packages**: `com.unity.addressables` (separate asmdef)
 
-## Repository Structure
+## Building and Testing
+
+This is a Unity package meant to be embedded in Unity projects. There are no standalone build commands - integration happens through Unity's package system.
+
+**Assembly Definitions**:
+- `CrossfadeAudio.Core.asmdef` - Core library (no external dependencies beyond Burst)
+- `CrossfadeAudio.Addressables.asmdef` - Optional Addressables integration
+
+**No test suite currently exists** - the project relies on manual testing with smoke test generators.
+
+## Architecture Overview
+
+### Core Design Pattern: Asset-Control-Realtime Triplet
+
+Every generator follows this SAP pattern:
+
+1. **Asset** (ScriptableObject): Implements `IAudioGenerator`, holds editor configuration
+2. **Control** (struct): Implements `IControl<TRealtime>`, runs on main thread, handles initialization and message passing
+3. **Realtime** (struct): Implements `IRealtime`, runs on audio thread with `[BurstCompile]`, performs actual audio processing
+
+**Critical Threading Constraint**:
+- `Configure()` runs in a **Job context**, where `Allocator.Persistent` is forbidden
+- Buffer allocation MUST happen in `CreateInstance()` (main thread) before Configure is called
+- This is why CrossfadeGeneratorAsset pre-allocates buffers using NativeBufferPool.Rent()
+
+### Layer Structure
 
 ```
-Assets/Plugins/unity-sap-crossfade-audio/
-├── Docs/CrossfadeAudio_DesignDocument_v1.1.0_Unity6.3_APIAligned.md  # Complete technical spec (Japanese)
-└── CrossfadeAudio/
-    ├── Runtime/Core/                    # Main library (CrossfadeAudio.Core.asmdef)
-    │   ├── Foundation/                  # SapCompat, NativeBufferPool, Resampler, ClipRequirements
-    │   ├── Types/                       # Core types and interfaces
-    │   ├── Generators/                  # AudioGenerator implementations
-    │   ├── Integration/                 # CrossfadeHandle
-    │   └── Components/                  # CrossfadePlayer MonoBehaviour
-    ├── Addressables/                    # Optional Addressables support (separate asmdef)
-    └── Tests/                           # Unit tests
+Foundation
+├── SapCompat          // Isolates SAP API boundary for version changes
+├── NativeBufferPool   // Memory pooling for Control-side buffers
+├── Resampler          // Sample rate conversion (Nearest/Linear/Hermite4)
+└── ClipRequirements   // AudioClip.GetData() constraint validation
+
+Core Generators
+├── ClipGenerator      // Simple AudioClip playback with resampling
+└── CrossfadeGenerator // Two-source mixer with crossfade curves
+
+Smoke (Development/Testing)
+└── SineSmokeGenerator // Sine wave generator for SAP smoke testing
 ```
 
-**Current State**: Directory structure exists but implementation is not yet complete. All code should follow the design document specifications.
+### CrossfadeGenerator Data Flow
 
-## Architecture Layers
+```
+CrossfadeGeneratorAsset (SO)
+    ↓ CreateInstance() - main thread
+    ├─ Allocate BufferDataA/B via NativeBufferPool.Rent()
+    ├─ Create ChildA/B generator instances
+    └─ Return GeneratorInstance
+        ↓
+CrossfadeGeneratorControl (Main Thread)
+    ├─ Configure() - validates child formats, initializes realtime state
+    ├─ OnMessage() - receives CrossfadeCommand, forwards via Pipe
+    └─ Dispose() - destroys children, returns buffers to pool
+        ↓ Pipe (lock-free communication)
+CrossfadeGeneratorRealtime (Audio Thread)
+    ├─ Update() - reads CrossfadeCommand from Pipe
+    └─ Process() - fetches child buffers, applies crossfade curve, mixes output
+```
 
-The library follows a strict layered architecture:
+### SapCompat: Version Isolation Layer
 
-### 1. Foundation Layer
-- **SapCompat**: Isolates SAP API changes across Unity versions (inline wrappers for Pipe, ControlContext, ChannelBuffer)
-- **NativeBufferPool**: Control-side NativeArray pooling to reduce allocation spikes on reconfiguration
-- **Resampler**: Burst-compatible sample rate conversion (Nearest/Linear/Hermite4)
-- **ClipRequirements**: AudioClip.GetData validation (DecompressOnLoad only, no streaming clips)
+Unity SAP APIs may change between 6.x versions. `SapCompat` isolates these points:
 
-### 2. Core Generators
-- **ClipGenerator**: Basic AudioClip playback with resampling support
-- **PagedClipGenerator**: Paged AudioClip playback for large files (avoids full PCM copy)
-- **PcmStreamGenerator**: External PCM streaming via IPcmPageProvider interface
-- **CrossfadeGenerator**: Two-source mixer with Equal-Power/Linear/S-Curve crossfade
+- `GetProcessedFrames()` - extracts frame count from GeneratorInstance.Result
+- `IsShortWrite()` - detects when child didn't fulfill request (end of stream)
+- `IsExhausted()` - detects complete exhaustion (0 frames)
 
-### 3. Integration Surface
-- **CrossfadeHandle**: Non-MonoBehaviour handle for controlling crossfades via ControlContext.builtIn
-- **PreloadCoordinator**: (Optional) Asset preload/unload coordination
+When Unity SAP APIs change, update only this file.
 
-### 4. High-Level (Optional)
-- **CrossfadePlayer**: MonoBehaviour wrapper providing Unity Inspector integration
+## Key Implementation Constraints
 
-## Critical Design Rules
+### 1. Zero-Exception Policy
 
-### Realtime vs Control Separation
-- **Control** (main thread): Resource allocation, AudioClip.GetData, Pipe.SendData, NativeArray management
-- **Realtime** (audio thread): Burst-compiled, allocation-free, exception-free, no Unity API calls
-- Communication: Control → Realtime via `Pipe.SendData`, Realtime reads via `Pipe.GetAvailableData`
+Never throw exceptions in Realtime code. Always degrade gracefully to silence:
 
-### Zero Exception Policy
-- Never throw exceptions in Realtime code
-- Gracefully handle: null clips, load failures, mismatched sample rates, buffer underruns
-- **Fallback**: Silent audio output on any error
+- AudioClip not set → silence
+- Load failed → silence
+- Sample rate mismatch (with ResampleMode.Off) → silence
+- Buffer inconsistency → silence
+- Child generator not created → silence
 
-### AudioClip.GetData Requirements
-- Only works with `LoadType = DecompressOnLoad`
-- **Fails** with streamed clips (LoadType.Streaming)
-- GetData returns false and fills buffer with zeros on failure
-- Always check `ClipRequirements.CanUseGetData()` before use
+### 2. Control/Realtime Thread Separation
 
-### Reconfiguration Safety
-- `Configure()` may be called multiple times
-- Always dispose/return pooled resources in Control.Dispose()
-- Use `NativeBufferPool.Return()` instead of direct Dispose() for pooled buffers
+| Context | Main Thread (Control) | Audio Thread (Realtime) |
+|---------|----------------------|-------------------------|
+| Memory allocation | ✅ Persistent allowed | ❌ Forbidden |
+| Unity API | ✅ Allowed | ❌ Forbidden |
+| Exceptions | ⚠️ Minimize | ❌ Forbidden |
+| Burst | ❌ Not supported | ✅ Required |
 
-### Ownership Rules (Addressables)
-- AssetReference does NOT auto-load/release
-- Explicit LoadAsync()/Release() required
-- Release() must be idempotent (safe to call multiple times)
+### 3. Job Context in Configure()
 
-## Key Technical Points
+`Configure()` runs in a **Job context** (since Unity 6.3), meaning:
 
-### SAP Core Concepts
-- `ControlContext.builtIn`: Standard Control context for managing generators
-- `GeneratorInstance`: Created via `AudioSource.generator`, controlled via `generatorInstance`
-- `ChannelBuffer`: 2D view (channels × frames) with interleaved internal layout
-- `Pipe`: Lock-free Control ↔ Realtime communication channel
+- ❌ Cannot allocate with `Allocator.Persistent`
+- ❌ Limited managed object access
+- ✅ Only `Allocator.Temp` available
+- **Solution**: Pre-allocate all buffers in `CreateInstance()` on main thread
 
-### Resampling
-- **ResampleMode.Off**: Mismatch → silent fallback (legacy compat)
-- **ResampleMode.Auto**: Mismatch → resample (recommended default)
-- **ResampleMode.Force**: Always resample (testing/validation)
-- Quality: Nearest / Linear / Hermite4
+### 4. AudioClip Constraints
 
-### Streaming Approaches
-1. **PagedClipGenerator**: Pages AudioClip data in Control thread, feeds to Realtime ring buffer
-2. **PcmStreamGenerator**: External PCM provider (IPcmPageProvider) for true streaming (network, decoder, etc.)
+Unity's `AudioClip.GetData()` behavior by LoadType:
 
-### Buffer Management
-- Control side: Use `NativeBufferPool.Rent/Return` for persistent NativeArray buffers
-- Realtime side: Read-only access to pre-allocated buffers, never allocate
-- Guard frames: +1 frame per page for interpolation stability at boundaries
+| LoadType | GetData() | Recommendation |
+|----------|-----------|----------------|
+| DecompressOnLoad | ✅ Works | Recommended |
+| CompressedInMemory | ⚠️ May work | Use with caution |
+| Streaming | ❌ **Does not work** | Cannot use |
 
-## Development Workflow
+**Important**: Unity documentation explicitly states GetData "does not work with streamed audio clips". Use PagedClipGenerator for large files or PcmStreamGenerator for true streaming.
 
-### When implementing generators:
-1. Create ScriptableObject asset class implementing `IAudioGenerator`
-2. Define Control struct implementing `GeneratorInstance.IControl<TRealtime>`
-3. Define Realtime struct implementing `GeneratorInstance.IRealtime` with `[BurstCompile]`
-4. Isolate SAP API calls via `SapCompat` static methods
-5. Ensure Configure() cleans up previous allocations before creating new ones
-6. Test reconfiguration by changing AudioSource.generator at runtime
+### 5. Ownership and Release Idempotency
 
-### When adding new features:
-- Maintain "crossfade specialization" scope (avoid general-purpose audio processing)
-- Keep external dependencies optional (e.g., Addressables in separate asmdef)
-- No audio decoding/encoding (external library responsibility)
-- Provide PCM input interfaces, not format parsers
+When using Addressables:
+- Explicit `LoadAsync()` / `Release()` required (Unity doesn't auto-manage)
+- `Release()` must be idempotent (safe to call multiple times)
+- Document who loads and who releases for each asset
 
-### Testing AudioClip compatibility:
+## Crossfade Implementation Details
+
+### Fade Curves
+
+| Curve | Formula | Use Case |
+|-------|---------|----------|
+| EqualPower | wA = cos(p×π/2), wB = sin(p×π/2) | Recommended - maintains constant energy |
+| Linear | wA = 1-p, wB = p | Simple linear blend |
+| SCurve | s = p²×(3-2p), wA = 1-s, wB = s | Smooth start/end |
+
+### CrossfadeCommand Structure
+
 ```csharp
-if (!ClipRequirements.CanUseGetData(clip))
+public struct CrossfadeCommand
 {
-    Debug.LogWarning($"Clip '{clip.name}' incompatible (streamed or compressed)");
-    // Fall back to silence
+    public float TargetPosition01;   // 0.0=A, 1.0=B
+    public float DurationSeconds;    // Fade duration
+    public CrossfadeCurve Curve;     // Curve type
 }
 ```
 
-## Common Patterns
+Sent from main thread via `OnMessage()` → `Pipe.SendData()`, received in `Realtime.Update()`.
 
-### Sending commands from Control to Realtime:
+## Memory Management
+
+### NativeBufferPool
+
+Control-side buffer pooling to reduce allocation spikes:
+
 ```csharp
-// In Control.OnMessage
-var cmd = message.Get<CrossfadeCommand>();
-var rtParams = new CrossfadeRealtimeParams(cmd.TargetPosition, cmd.DurationSeconds * sampleRate, cmd.Curve);
-SapCompat.SendData(pipe, context, rtParams);
+// Rent a buffer
+var buffer = NativeBufferPool.Rent(length: requiredFloats);
+
+// Use buffer...
+
+// Return when done (in Control.Dispose)
+NativeBufferPool.Return(ref buffer);
 ```
 
-### Reading Pipe data in Realtime:
-```csharp
-// In Realtime.Update
-var it = SapCompat.GetAvailableData(pipe, context);
-foreach (var element in it)
-{
-    if (element.TryGetData(out MyData data))
-    {
-        // Process command
-    }
-}
-```
+**Limits**:
+- Per-size limit: 8 buffers per size
+- Total limit: 8M floats ≈ 32MB
 
-### Using CrossfadeHandle:
-```csharp
-var handle = new CrossfadeHandle(audioSource.generatorInstance);
-if (handle.IsValid)
-{
-    handle.TryCrossfadeToB(2.0f, CrossfadeCurve.EqualPower);
-}
-```
+## Resampling
 
-## Reference Documentation
+When child generator sample rate doesn't match output:
 
-The complete technical specification with code samples is in:
-- `Docs/CrossfadeAudio_DesignDocument_v1.1.0_Unity6.3_APIAligned.md`
+**ResampleMode**:
+- `Off` - No resampling, mismatch → silence
+- `Auto` - Resample only if needed (default)
+- `Force` - Always resample
 
-This document contains:
-- Full struct/class definitions for all components
-- Resampling algorithms
-- Paging implementation details
-- Safety checklists
-- Usage examples
+**ResampleQuality**:
+- `Nearest` - Nearest neighbor (fastest)
+- `Linear` - Linear interpolation (recommended)
+- `Hermite4` - 4-point Hermite (highest quality)
 
-When implementing any component, refer to the design document for the exact struct layout, field names, and algorithmic details.
+## Known Limitations
+
+### Currently Missing Features (per design doc v1.1.0)
+
+- **CrossfadeHandle** - Non-MonoBehaviour control surface (designed but not implemented)
+- **CrossfadePlayer** - MonoBehaviour wrapper for Inspector integration (not implemented)
+- **PagedClipGenerator** - Paged AudioClip playback for large files (not implemented)
+- **PcmStreamGenerator** - External PCM streaming (not implemented)
+- **Addressables generators** - Separate asmdef exists but no implementations
+
+### Performance Considerations
+
+- Burst compilation enabled for Realtime structs with `FloatMode.Fast`, `FloatPrecision.Medium`
+- `[MethodImpl(AggressiveInlining)]` used for critical paths
+- Buffer clearing every frame has cost - only clear required ranges
+
+## Development Guidelines
+
+### When Adding New Generators
+
+1. Follow Asset-Control-Realtime triplet pattern
+2. Pre-allocate all buffers in CreateInstance() (not Configure)
+3. Use SapCompat for all SAP API interactions
+4. Never throw exceptions in Realtime code
+5. Return buffers to NativeBufferPool in Control.Dispose()
+6. Validate format compatibility before processing
+
+### When Modifying SAP Integration
+
+Only modify `SapCompat.cs` to maintain isolation. Add inline documentation for why changes are needed.
+
+### Namespace Convention
+
+All code uses `TomoLudens.CrossfadeAudio.Runtime.Core` namespace (root: `TomoLudens`).
+
+## Documentation References
+
+- Detailed technical design: `Docs/CrossfadeAudio_DesignDocument_v1.1.0_Unity6.3_APIAligned.md`
+- Comprehensive architecture overview: `README.md` (Japanese)
+- Unity SAP Documentation: docs.unity3d.com/Manual/audio-scriptable-processors-concepts.html
+
+## Future Roadmap (from design doc)
+
+**Short-term** (maintaining crossfade focus):
+- Complete CrossfadeHandle implementation
+- Enhanced error diagnostics in Control (dev build only)
+- Full Configure() stability for Job context
+
+**Mid-term**:
+- Internal resampling in PcmStreamGenerator
+- Stricter paged clip supply tracking (generation IDs)
+- Fade completion callbacks
+- Fade command queueing
+
+**Out of Scope** (external library responsibility):
+- Audio codec decoding (mp3/ogg)
+- Network I/O
+- 3D spatial audio (Unity built-in)
+- Audio effects (reverb, etc.)
