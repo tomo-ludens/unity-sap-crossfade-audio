@@ -3,6 +3,9 @@ using CrossfadeAudio.Runtime.Core.Integration;
 using CrossfadeAudio.Runtime.Core.Types;
 using CrossfadeAudio.Runtime.Core.Generators.Crossfade;
 
+// ReSharper disable once RedundantUsingDirective
+using CrossfadeAudio.Runtime.Core;
+
 namespace CrossfadeAudio.Runtime.Core.Components
 {
     /// <summary>
@@ -68,9 +71,7 @@ namespace CrossfadeAudio.Runtime.Core.Components
         {
             if (_audioSource == null || generator == null)
             {
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
-                Debug.LogWarning(message: "[CrossfadePlayer] AudioSource または Generator が設定されていません。", context: this);
-#endif
+                CrossfadeLogger.LogWarning<CrossfadePlayer>(message: "AudioSource または Generator が設定されていません。", context: this);
                 return;
             }
 
@@ -99,9 +100,7 @@ namespace CrossfadeAudio.Runtime.Core.Components
             var handle = Handle;
             if (!handle.IsValid)
             {
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
-                Debug.LogWarning(message: "[CrossfadePlayer] generatorInstance が利用できません。AudioSource は再生中ですか？", context: this);
-#endif
+                CrossfadeLogger.LogWarning<CrossfadePlayer>(message: "generatorInstance が利用できません。AudioSource は再生中ですか？", context: this);
                 return;
             }
 
@@ -118,9 +117,7 @@ namespace CrossfadeAudio.Runtime.Core.Components
             var handle = Handle;
             if (!handle.IsValid)
             {
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
-                Debug.LogWarning(message: "[CrossfadePlayer] generatorInstance が利用できません。AudioSource は再生中ですか？", context: this);
-#endif
+                CrossfadeLogger.LogWarning<CrossfadePlayer>(message: "generatorInstance が利用できません。AudioSource は再生中ですか？", context: this);
                 return;
             }
 
@@ -138,9 +135,7 @@ namespace CrossfadeAudio.Runtime.Core.Components
             var handle = Handle;
             if (!handle.IsValid)
             {
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
-                Debug.LogWarning(message: "[CrossfadePlayer] generatorInstance が利用できません。AudioSource は再生中ですか？", context: this);
-#endif
+                CrossfadeLogger.LogWarning<CrossfadePlayer>(message: "generatorInstance が利用できません。AudioSource は再生中ですか？", context: this);
                 return;
             }
 
@@ -156,9 +151,7 @@ namespace CrossfadeAudio.Runtime.Core.Components
             var handle = Handle;
             if (!handle.IsValid)
             {
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
-                Debug.LogWarning(message: "[CrossfadePlayer] generatorInstance が利用できません。AudioSource は再生中ですか？", context: this);
-#endif
+                CrossfadeLogger.LogWarning<CrossfadePlayer>(message: "generatorInstance が利用できません。AudioSource は再生中ですか？", context: this);
                 return;
             }
 
