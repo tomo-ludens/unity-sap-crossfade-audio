@@ -1,6 +1,6 @@
 using System;
 
-namespace TomoLudens.CrossfadeAudio.Runtime.Core.Types
+namespace CrossfadeAudio.Runtime.Core.Types
 {
     /// <summary>
     /// 外部PCM供給（真のストリーミング）用の供給インターフェース。

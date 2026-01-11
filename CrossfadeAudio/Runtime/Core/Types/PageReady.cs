@@ -1,4 +1,4 @@
-namespace TomoLudens.CrossfadeAudio.Runtime.Core.Types
+namespace CrossfadeAudio.Runtime.Core.Types
 {
     /// <summary>
     /// Paging/Streaming 用：Control→Realtime に「ページが用意できた」ことを伝えるメッセージ。

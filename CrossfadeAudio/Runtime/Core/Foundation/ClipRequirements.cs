@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace TomoLudens.CrossfadeAudio.Runtime.Core.Foundation
+namespace CrossfadeAudio.Runtime.Core.Foundation
 {
     /// <summary>
     /// AudioClip.GetData 前提の要件（Import設定・Load状態）をガードする。

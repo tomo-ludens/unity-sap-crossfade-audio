@@ -4,10 +4,10 @@ using Unity.Collections;
 using Unity.IntegerTime;
 using Unity.Mathematics;
 using UnityEngine.Audio;
-using TomoLudens.CrossfadeAudio.Runtime.Core.Foundation;
-using TomoLudens.CrossfadeAudio.Runtime.Core.Types;
+using CrossfadeAudio.Runtime.Core.Foundation;
+using CrossfadeAudio.Runtime.Core.Types;
 
-namespace TomoLudens.CrossfadeAudio.Runtime.Core.Generators.Crossfade
+namespace CrossfadeAudio.Runtime.Core.Generators.Crossfade
 {
     [BurstCompile(CompileSynchronously = true, FloatMode = FloatMode.Fast, FloatPrecision = FloatPrecision.Medium)]
     public struct CrossfadeGeneratorRealtime : GeneratorInstance.IRealtime
@@ -25,8 +25,8 @@ namespace TomoLudens.CrossfadeAudio.Runtime.Core.Generators.Crossfade
         public CrossfadeCurve CurrentCurve;
         public float SampleRate;
 
-        public bool ChildAFinished;
-        public bool ChildBFinished;
+        private bool _childAFinished;
+        private bool _childBFinished;
 
         public bool ChildAFormatCompatible;
         public bool ChildBFormatCompatible;
@@ -65,14 +65,14 @@ namespace TomoLudens.CrossfadeAudio.Runtime.Core.Generators.Crossfade
             int requiredFloats = requestedFrames * channels;
 
             bool canUseA =
-                !ChildAFinished &&
+                !_childAFinished &&
                 ChildAFormatCompatible &&
                 !ChildA.Equals(other: default) &&
                 BufferDataA.IsCreated &&
                 BufferDataA.Length >= requiredFloats;
 
             bool canUseB =
-                !ChildBFinished &&
+                !_childBFinished &&
                 ChildBFormatCompatible &&
                 !ChildB.Equals(other: default) &&
                 BufferDataB.IsCreated &&
@@ -95,7 +95,7 @@ namespace TomoLudens.CrossfadeAudio.Runtime.Core.Generators.Crossfade
 
                 if (SapCompat.IsShortWrite(result: in resultA, requestedFrames: requestedFrames))
                 {
-                    ChildAFinished = true;
+                    _childAFinished = true;
                 }
             }
 
@@ -110,7 +110,7 @@ namespace TomoLudens.CrossfadeAudio.Runtime.Core.Generators.Crossfade
 
                 if (SapCompat.IsShortWrite(result: in resultB, requestedFrames: requestedFrames))
                 {
-                    ChildBFinished = true;
+                    _childBFinished = true;
                 }
             }
 

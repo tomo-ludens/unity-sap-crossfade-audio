@@ -1,6 +1,6 @@
 using System.Runtime.CompilerServices;
 
-namespace TomoLudens.CrossfadeAudio.Runtime.Core.Types
+namespace CrossfadeAudio.Runtime.Core.Types
 {
     /// <summary>
     /// Crossfade のターゲットと遷移時間（秒）、カーブを指定するコマンド。

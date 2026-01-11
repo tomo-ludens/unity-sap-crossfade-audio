@@ -3,10 +3,10 @@ using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.Audio;
 using static UnityEngine.Audio.ProcessorInstance;
-using TomoLudens.CrossfadeAudio.Runtime.Core.Foundation;
-using TomoLudens.CrossfadeAudio.Runtime.Core.Types;
+using CrossfadeAudio.Runtime.Core.Foundation;
+using CrossfadeAudio.Runtime.Core.Types;
 
-namespace TomoLudens.CrossfadeAudio.Runtime.Core.Generators.Crossfade
+namespace CrossfadeAudio.Runtime.Core.Generators.Crossfade
 {
     public struct CrossfadeGeneratorControl : GeneratorInstance.IControl<CrossfadeGeneratorRealtime>
     {

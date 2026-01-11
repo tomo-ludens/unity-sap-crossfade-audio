@@ -1,4 +1,4 @@
-namespace TomoLudens.CrossfadeAudio.Runtime.Core.Generators.Crossfade
+namespace CrossfadeAudio.Runtime.Core.Generators.Crossfade
 {
     public class ChannelBufferCompat
     {

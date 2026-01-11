@@ -29,9 +29,9 @@ namespace CrossfadeAudio.Runtime.Smoke
         {
             var realtime = new SineSmokeRealtime
             {
-                frequency = frequency,
-                amplitude = amplitude,
-                sampleRate = 48000.0f
+                Frequency = frequency,
+                Amplitude = amplitude,
+                SampleRate = 48000.0f
             };
 
             return context.AllocateGenerator(

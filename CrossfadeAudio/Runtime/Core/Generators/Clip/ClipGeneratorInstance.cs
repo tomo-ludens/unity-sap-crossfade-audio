@@ -4,11 +4,11 @@ using Unity.Collections;
 using Unity.IntegerTime;
 using UnityEngine.Audio;
 using static UnityEngine.Audio.ProcessorInstance;
-using TomoLudens.CrossfadeAudio.Runtime.Core.Foundation;
-using TomoLudens.CrossfadeAudio.Runtime.Core.Foundation.Resampling;
+using CrossfadeAudio.Runtime.Core.Foundation;
+using CrossfadeAudio.Runtime.Core.Foundation.Resampling;
 using UnityEngine;
 
-namespace TomoLudens.CrossfadeAudio.Runtime.Core.Generators.Clip
+namespace CrossfadeAudio.Runtime.Core.Generators.Clip
 {
     [BurstCompile(CompileSynchronously = true)]
     internal struct ClipGeneratorRealtime : GeneratorInstance.IRealtime

@@ -1,4 +1,4 @@
-namespace TomoLudens.CrossfadeAudio.Runtime.Core.Types
+namespace CrossfadeAudio.Runtime.Core.Types
 {
     /// <summary>
     /// Realtime側（audio thread）でそのまま消費できる形式に変換したパラメータ。

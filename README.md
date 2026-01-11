@@ -216,6 +216,95 @@ CrossfadeCurve.Linear      // wA = 1 - p, wB = p
 CrossfadeCurve.SCurve      // smoothstep 補間
 ```
 
+### Recommended: CrossfadePlayer を使用
+
+最も簡単な方法は、CrossfadePlayer コンポーネントを使用することです。
+
+```csharp
+using UnityEngine;
+using TomoLudens.CrossfadeAudio.Runtime.Core.Components;
+using TomoLudens.CrossfadeAudio.Runtime.Core.Types;
+
+public class BgmManager : MonoBehaviour
+{
+    [SerializeField] private CrossfadePlayer _player;
+
+    public void OnBattleStart()
+    {
+        _player.CrossfadeToB(2f, CrossfadeCurve.EqualPower);
+    }
+
+    public void OnBattleEnd()
+    {
+        _player.CrossfadeToA(3f, CrossfadeCurve.EqualPower);
+    }
+
+    public void OnMenuOpen()
+    {
+        _player.SetImmediate(0f); // 即時切り替え
+    }
+}
+```
+
+### CrossfadeHandle: 非 MonoBehaviour 制御
+
+DI やステートマシンから制御する場合は CrossfadeHandle を使用します。
+
+```csharp
+using TomoLudens.CrossfadeAudio.Runtime.Core.Integration;
+using TomoLudens.CrossfadeAudio.Runtime.Core.Types;
+
+public class AudioService
+{
+    private CrossfadeHandle _handle;
+
+    public void Initialize(AudioSource source)
+    {
+        _handle = CrossfadeHandle.FromAudioSource(source);
+    }
+
+    public void CrossfadeTo(float position, float duration)
+    {
+        if (_handle.IsValid)
+        {
+            _handle.TryCrossfade(position, duration, CrossfadeCurve.EqualPower);
+        }
+    }
+}
+```
+
+### Addressables: 遅延ロード対応
+
+Addressables を使用する場合は、事前ロードでヒッチを回避できます。
+
+```csharp
+using TomoLudens.CrossfadeAudio.Addressables;
+
+public class AddressableBgmManager : MonoBehaviour
+{
+    [SerializeField] private AddressableClipGeneratorAsset _generator;
+    [SerializeField] private AudioSource _audioSource;
+
+    async void Start()
+    {
+        // 事前ロード（ヒッチ回避）
+        await _generator.PreloadAsync();
+
+        if (_generator.IsReady)
+        {
+            _audioSource.generator = _generator;
+            _audioSource.Play();
+        }
+    }
+
+    void OnDestroy()
+    {
+        // 冪等な解放（何度呼んでも安全）
+        _generator.Release();
+    }
+}
+```
+
 ---
 
 ## API Reference
@@ -258,6 +347,55 @@ public enum CrossfadeCurve
 | `initialPosition01` | `float` | 初期フェード位置（0-1） |
 | `initialCurve` | `CrossfadeCurve` | 初期カーブ |
 | `defaultFadeSeconds` | `float` | デフォルトフェード秒数 |
+
+### CrossfadeHandle
+
+非 MonoBehaviour から CrossfadeGenerator を操作するための軽量ハンドル。
+
+```csharp
+public readonly struct CrossfadeHandle
+{
+    public bool IsValid { get; }
+    public bool TryCrossfade(float target, float duration, CrossfadeCurve curve);
+    public bool TryCrossfadeToA(float duration, CrossfadeCurve curve);
+    public bool TryCrossfadeToB(float duration, CrossfadeCurve curve);
+    public bool TrySetImmediate(float position);
+
+    public static CrossfadeHandle FromAudioSource(AudioSource source);
+}
+```
+
+### CrossfadePlayer
+
+Inspector 統合用の MonoBehaviour ラッパー。
+
+| メソッド | 説明 |
+|---------|------|
+| `Play()` | Generator を設定して再生開始 |
+| `Stop()` | 再生停止 |
+| `CrossfadeToA(duration, curve)` | Source A へクロスフェード |
+| `CrossfadeToB(duration, curve)` | Source B へクロスフェード |
+| `Crossfade(target, duration, curve)` | 指定位置へクロスフェード |
+| `SetImmediate(position)` | 即座に位置を設定 |
+
+| プロパティ | 型 | 説明 |
+|-----------|-----|------|
+| `Handle` | `CrossfadeHandle` | 現在の操作ハンドル |
+| `IsPlaying` | `bool` | 再生中かどうか |
+| `AudioSource` | `AudioSource` | 内部の AudioSource |
+
+### AddressableClipGeneratorAsset
+
+Addressables を使用した AudioClip ジェネレーター。
+
+| メソッド | 説明 |
+|---------|------|
+| `PreloadAsync()` | アセットを事前ロード |
+| `Release()` | アセットを解放（冪等） |
+
+| プロパティ | 型 | 説明 |
+|-----------|-----|------|
+| `IsReady` | `bool` | ロード済みで再生可能か |
 
 ---
 
@@ -352,11 +490,41 @@ CrossfadeAudio/
 │       ├── Types/
 │       │   ├── CrossfadeCommand.cs
 │       │   └── CrossfadeCurve.cs
-│       └── Generators/
-│           ├── Clip/                     # AudioClip 再生
-│           └── Crossfade/                # クロスフェード
-└── Addressables/                         # 任意（別 asmdef）
+│       ├── Generators/
+│       │   ├── Clip/                     # AudioClip 再生
+│       │   └── Crossfade/                # クロスフェード
+│       ├── Integration/
+│       │   └── CrossfadeHandle.cs        # 非MonoBehaviour制御
+│       └── Components/
+│           └── CrossfadePlayer.cs        # MonoBehaviourラッパー
+├── Addressables/                         # 任意（別 asmdef）
+│   ├── IPreloadableAudioGenerator.cs
+│   └── AddressableClipGeneratorAsset.cs
+└── Tests/
+    ├── Editor/                           # EditModeテスト
+    └── Runtime/                          # PlayModeテスト
 ```
+
+---
+
+## Testing
+
+### テストの実行
+
+**Unity Editor で実行**:
+1. Window > General > Test Runner を開く
+2. EditMode または PlayMode タブを選択
+3. "Run All" をクリック、または特定のテストを選択
+
+**テストカバレッジ**:
+- EditMode: NativeBufferPool, Resampler, CrossfadeCommand
+- PlayMode: CrossfadeHandle, CrossfadePlayer 統合
+
+### CI/CD
+
+GitHub Actions でテストが自動実行されます:
+- `test.yml` - push/PR 時に EditMode/PlayMode テストを実行
+- `release.yml` - タグ push 時にリリースを作成
 
 ---
 

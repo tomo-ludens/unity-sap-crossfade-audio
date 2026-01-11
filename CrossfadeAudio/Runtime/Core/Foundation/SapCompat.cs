@@ -1,7 +1,7 @@
 using System.Runtime.CompilerServices;
 using UnityEngine.Audio;
 
-namespace TomoLudens.CrossfadeAudio.Runtime.Core.Foundation
+namespace CrossfadeAudio.Runtime.Core.Foundation
 {
     internal static class SapCompat
     {

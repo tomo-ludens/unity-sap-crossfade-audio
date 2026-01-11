@@ -8,10 +8,10 @@ namespace CrossfadeAudio.Runtime.Smoke
 {
     internal readonly struct FrequencyEvent
     {
-        public readonly float value;
+        public readonly float Value;
 
         public FrequencyEvent(float value)
-            => this.value = value;
+            => this.Value = value;
     }
 
     [BurstCompile(CompileSynchronously = true)]
@@ -20,9 +20,9 @@ namespace CrossfadeAudio.Runtime.Smoke
         private const float TwoPi = 2.0f * Mathf.PI;
 
         private float _phase; // [0,1)
-        internal float frequency;
-        internal float sampleRate;
-        internal float amplitude;
+        internal float Frequency;
+        internal float SampleRate;
+        internal float Amplitude;
 
         public bool isFinite => false;
         public bool isRealtime => false;
@@ -34,7 +34,7 @@ namespace CrossfadeAudio.Runtime.Smoke
             {
                 if (element.TryGetData(data: out FrequencyEvent evt))
                 {
-                    frequency = evt.value;
+                    Frequency = evt.Value;
                 }
             }
         }
@@ -45,11 +45,11 @@ namespace CrossfadeAudio.Runtime.Smoke
             ChannelBuffer buffer,
             GeneratorInstance.Arguments args)
         {
-            float phaseIncrement = frequency / sampleRate;
+            float phaseIncrement = Frequency / SampleRate;
 
             for (int frame = 0; frame < buffer.frameCount; frame++)
             {
-                float s = Mathf.Sin(f: _phase * TwoPi) * amplitude;
+                float s = Mathf.Sin(f: _phase * TwoPi) * Amplitude;
 
                 for (int ch = 0; ch < buffer.channelCount; ch++)
                 {
@@ -94,7 +94,7 @@ namespace CrossfadeAudio.Runtime.Smoke
             out GeneratorInstance.Setup setup,
             ref GeneratorInstance.Properties properties)
         {
-            realtime.sampleRate = format.sampleRate;
+            realtime.SampleRate = format.sampleRate;
 
             // ホストフォーマットに寄せるのが推奨。
             setup = new GeneratorInstance.Setup(speakerMode: format.speakerMode, sampleRate: format.sampleRate);

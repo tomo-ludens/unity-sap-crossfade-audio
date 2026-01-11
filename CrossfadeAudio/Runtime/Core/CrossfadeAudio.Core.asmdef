@@ -1,6 +1,5 @@
 {
   "name": "CrossfadeAudio.Core",
-  "rootNamespace": "TomoLudens",
   "references": [
     "Unity.Burst",
     "Unity.Collections",

@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using Unity.Collections;
 
-namespace TomoLudens.CrossfadeAudio.Runtime.Core.Foundation
+namespace CrossfadeAudio.Runtime.Core.Foundation
 {
     /// <summary>
     /// Control側のみで使う NativeArray&lt;float&gt; の簡易プール。

@@ -1,4 +1,4 @@
-namespace TomoLudens.CrossfadeAudio.Runtime.Core.Types
+namespace CrossfadeAudio.Runtime.Core.Types
 {
     public enum CrossfadeCurve
     {

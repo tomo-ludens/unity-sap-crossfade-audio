@@ -2,10 +2,10 @@ using Unity.IntegerTime;
 using UnityEngine;
 using UnityEngine.Audio;
 using static UnityEngine.Audio.ProcessorInstance;
-using TomoLudens.CrossfadeAudio.Runtime.Core.Foundation;
-using TomoLudens.CrossfadeAudio.Runtime.Core.Types;
+using CrossfadeAudio.Runtime.Core.Foundation;
+using CrossfadeAudio.Runtime.Core.Types;
 
-namespace TomoLudens.CrossfadeAudio.Runtime.Core.Generators.Crossfade
+namespace CrossfadeAudio.Runtime.Core.Generators.Crossfade
 {
     [CreateAssetMenu(fileName = "CrossfadeGenerator", menuName = "TomoLudens/CrossfadeAudio/Generators/CrossfadeGenerator", order = 20)]
     public sealed class CrossfadeGeneratorAsset : ScriptableObject, IAudioGenerator

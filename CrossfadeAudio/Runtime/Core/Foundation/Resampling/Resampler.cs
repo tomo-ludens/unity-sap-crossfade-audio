@@ -1,6 +1,6 @@
 using System.Runtime.CompilerServices;
 
-namespace TomoLudens.CrossfadeAudio.Runtime.Core.Foundation.Resampling
+namespace CrossfadeAudio.Runtime.Core.Foundation.Resampling
 {
     internal static class Resampler
     {

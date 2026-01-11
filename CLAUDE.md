@@ -17,8 +17,25 @@ This is a Unity package meant to be embedded in Unity projects. There are no sta
 **Assembly Definitions**:
 - `CrossfadeAudio.Core.asmdef` - Core library (no external dependencies beyond Burst)
 - `CrossfadeAudio.Addressables.asmdef` - Optional Addressables integration
+- `CrossfadeAudio.Tests.Editor.asmdef` - EditMode tests
+- `CrossfadeAudio.Tests.Runtime.asmdef` - PlayMode tests
 
-**No test suite currently exists** - the project relies on manual testing with smoke test generators.
+### Running Tests
+
+**In Unity Editor**:
+1. Open Window > General > Test Runner
+2. Select EditMode or PlayMode tab
+3. Click "Run All" or select specific tests
+
+**Test Coverage**:
+- EditMode: NativeBufferPool, Resampler, CrossfadeCommand
+- PlayMode: CrossfadeHandle, CrossfadePlayer integration
+
+### CI/CD
+
+GitHub Actions workflows are configured in `.github/workflows/`:
+- `test.yml` - Runs EditMode and PlayMode tests on push/PR
+- `release.yml` - Creates releases on version tags
 
 ## Architecture Overview
 
@@ -47,6 +64,17 @@ Foundation
 Core Generators
 ├── ClipGenerator      // Simple AudioClip playback with resampling
 └── CrossfadeGenerator // Two-source mixer with crossfade curves
+
+Integration
+├── CrossfadeHandle    // Non-MonoBehaviour control surface ✅ Implemented
+└── CrossfadePlayer    // MonoBehaviour wrapper ✅ Implemented
+
+Components
+└── CrossfadePlayer    // Inspector integration
+
+Addressables (optional)
+├── IPreloadableAudioGenerator  // Preload interface ✅ Implemented
+└── AddressableClipGeneratorAsset // Addressables integration ✅ Implemented
 
 Smoke (Development/Testing)
 └── SineSmokeGenerator // Sine wave generator for SAP smoke testing
@@ -153,6 +181,31 @@ public struct CrossfadeCommand
 
 Sent from main thread via `OnMessage()` → `Pipe.SendData()`, received in `Realtime.Update()`.
 
+### CrossfadeHandle Usage
+
+```csharp
+// Get handle from AudioSource
+var handle = CrossfadeHandle.FromAudioSource(audioSource);
+
+// Check validity before use
+if (handle.IsValid)
+{
+    handle.TryCrossfadeToB(2f, CrossfadeCurve.EqualPower);
+}
+```
+
+### CrossfadePlayer Usage
+
+```csharp
+// Attach to GameObject with AudioSource
+[SerializeField] CrossfadePlayer player;
+
+// Simple crossfade
+player.CrossfadeToB(2f, CrossfadeCurve.EqualPower);
+player.CrossfadeToA(1.5f, CrossfadeCurve.Linear);
+player.SetImmediate(0.5f); // Instant position change
+```
+
 ## Memory Management
 
 ### NativeBufferPool
@@ -187,15 +240,41 @@ When child generator sample rate doesn't match output:
 - `Linear` - Linear interpolation (recommended)
 - `Hermite4` - 4-point Hermite (highest quality)
 
-## Known Limitations
+## Addressables Integration
 
-### Currently Missing Features (per design doc v1.1.0)
+### AddressableClipGeneratorAsset
 
-- **CrossfadeHandle** - Non-MonoBehaviour control surface (designed but not implemented)
-- **CrossfadePlayer** - MonoBehaviour wrapper for Inspector integration (not implemented)
-- **PagedClipGenerator** - Paged AudioClip playback for large files (not implemented)
-- **PcmStreamGenerator** - External PCM streaming (not implemented)
-- **Addressables generators** - Separate asmdef exists but no implementations
+For projects using Addressables:
+
+```csharp
+// Preload before playback to avoid hitches
+await addressableGenerator.PreloadAsync();
+
+// Check if ready
+if (addressableGenerator.IsReady)
+{
+    audioSource.generator = addressableGenerator;
+    audioSource.Play();
+}
+
+// Release when done
+addressableGenerator.Release(); // Idempotent - safe to call multiple times
+```
+
+## Implementation Status
+
+### ✅ Implemented
+
+- **CrossfadeHandle** - Non-MonoBehaviour control surface
+- **CrossfadePlayer** - MonoBehaviour wrapper for Inspector integration
+- **AddressableClipGeneratorAsset** - Addressables integration with preload support
+- **IPreloadableAudioGenerator** - Interface for preloadable generators
+- **Test Suite** - EditMode and PlayMode tests
+
+### 🔜 Not Yet Implemented
+
+- **PagedClipGenerator** - Paged AudioClip playback for large files
+- **PcmStreamGenerator** - External PCM streaming
 
 ### Performance Considerations
 
@@ -214,6 +293,13 @@ When child generator sample rate doesn't match output:
 5. Return buffers to NativeBufferPool in Control.Dispose()
 6. Validate format compatibility before processing
 
+### When Adding Tests
+
+1. EditMode tests go in `Tests/Editor/` with `[TestFixture]` attribute
+2. PlayMode tests go in `Tests/Runtime/`
+3. Use `[SetUp]` and `[TearDown]` for resource management
+4. Test both success and failure paths
+
 ### When Modifying SAP Integration
 
 Only modify `SapCompat.cs` to maintain isolation. Add inline documentation for why changes are needed.
@@ -231,7 +317,7 @@ All code uses `TomoLudens.CrossfadeAudio.Runtime.Core` namespace (root: `TomoLud
 ## Future Roadmap (from design doc)
 
 **Short-term** (maintaining crossfade focus):
-- Complete CrossfadeHandle implementation
+- ~~Complete CrossfadeHandle implementation~~ ✅ Done
 - Enhanced error diagnostics in Control (dev build only)
 - Full Configure() stability for Job context
 

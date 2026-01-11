@@ -1,0 +1,138 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., 1.0.0)'
+        required: true
+        type: string
+
+jobs:
+  validate:
+    name: Validate Release
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.get-version.outputs.version }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Get version
+        id: get-version
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            VERSION="${{ inputs.version }}"
+          else
+            VERSION="${GITHUB_REF#refs/tags/v}"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Release version: $VERSION"
+
+      - name: Validate version format
+        run: |
+          VERSION="${{ steps.get-version.outputs.version }}"
+          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9]+)?$ ]]; then
+            echo "Invalid version format: $VERSION"
+            echo "Expected format: X.Y.Z or X.Y.Z-suffix"
+            exit 1
+          fi
+
+  test:
+    name: Run Tests
+    needs: validate
+    uses: ./.github/workflows/test.yml
+    secrets: inherit
+
+  release:
+    name: Create Release
+    needs: [validate, test]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Create package archive
+        run: |
+          VERSION="${{ needs.validate.outputs.version }}"
+          PACKAGE_NAME="CrossfadeAudio-${VERSION}"
+
+          # Create package directory
+          mkdir -p "${PACKAGE_NAME}"
+
+          # Copy package contents
+          cp -r CrossfadeAudio "${PACKAGE_NAME}/"
+          cp -r Docs "${PACKAGE_NAME}/" 2>/dev/null || true
+          cp LICENSE "${PACKAGE_NAME}/"
+          cp README.md "${PACKAGE_NAME}/"
+          cp CLAUDE.md "${PACKAGE_NAME}/" 2>/dev/null || true
+
+          # Create zip archive
+          zip -r "${PACKAGE_NAME}.zip" "${PACKAGE_NAME}"
+
+          # Create tar.gz archive
+          tar -czvf "${PACKAGE_NAME}.tar.gz" "${PACKAGE_NAME}"
+
+          echo "Created archives:"
+          ls -la *.zip *.tar.gz
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          # Get commits since last tag
+          LAST_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+
+          if [ -n "$LAST_TAG" ]; then
+            CHANGELOG=$(git log --pretty=format:"- %s (%h)" "${LAST_TAG}..HEAD")
+          else
+            CHANGELOG=$(git log --pretty=format:"- %s (%h)" -20)
+          fi
+
+          # Escape for GitHub Actions
+          CHANGELOG="${CHANGELOG//'%'/'%25'}"
+          CHANGELOG="${CHANGELOG//$'\n'/'%0A'}"
+          CHANGELOG="${CHANGELOG//$'\r'/'%0D'}"
+
+          echo "changelog=$CHANGELOG" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ needs.validate.outputs.version }}
+          name: CrossfadeAudio v${{ needs.validate.outputs.version }}
+          body: |
+            ## CrossfadeAudio v${{ needs.validate.outputs.version }}
+
+            Unity 6.3+ Scriptable Audio Pipeline クロスフェードライブラリ
+
+            ### Changes
+
+            ${{ steps.changelog.outputs.changelog }}
+
+            ### Installation
+
+            **Unity Package Manager (Git URL)**:
+            ```
+            https://github.com/${{ github.repository }}.git?path=Assets/Plugins/unity-sap-crossfade-audio
+            ```
+
+            **Manual Installation**:
+            1. Download the `.zip` or `.tar.gz` archive
+            2. Extract to your project's `Assets/Plugins/` folder
+
+            ### Requirements
+
+            - Unity 6.3.4f1 or later
+            - `com.unity.burst` package
+          files: |
+            CrossfadeAudio-${{ needs.validate.outputs.version }}.zip
+            CrossfadeAudio-${{ needs.validate.outputs.version }}.tar.gz
+          draft: false
+          prerelease: ${{ contains(needs.validate.outputs.version, '-') }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
