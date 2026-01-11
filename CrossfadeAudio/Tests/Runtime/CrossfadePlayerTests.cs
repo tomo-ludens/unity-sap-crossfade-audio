@@ -22,6 +22,7 @@ namespace CrossfadeAudio.Tests.Runtime
             _testObject = new GameObject(name: "TestCrossfadePlayer");
             _audioSource = _testObject.AddComponent<AudioSource>();
             _audioSource.playOnAwake = false;
+            _audioSource.Stop(); // playOnAwake=true (default) で Awake 時に再生開始される可能性があるため明示的に停止
             _player = _testObject.AddComponent<CrossfadePlayer>();
         }
 
