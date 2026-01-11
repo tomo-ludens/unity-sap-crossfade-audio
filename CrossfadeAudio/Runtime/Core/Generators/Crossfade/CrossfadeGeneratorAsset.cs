@@ -15,12 +15,14 @@ namespace TomoLudens.CrossfadeAudio.Runtime.Core.Generators.Crossfade
         public ScriptableObject sourceB;
 
         [Header(header: "Initial State")]
-        [Range(min: 0.0f, max: 1.0f)]
+        [SerializeField]
+        private CrossfadeCurve initialCurve = CrossfadeCurve.EqualPower;
+
+        [SerializeField] [Range(min: 0.0f, max: 1.0f)]
         public float initialPosition01;
 
-        public CrossfadeCurve initialCurve = CrossfadeCurve.EqualPower;
-
-        [Min(min: 0.0f)] private const float DefaultFadeSeconds = 0.25f;
+        [SerializeField] [Min(min: 0.0f)]
+        private float defaultFadeSeconds = 0.25f;
 
         public bool isFinite => false;
         public bool isRealtime => false;
@@ -39,7 +41,7 @@ namespace TomoLudens.CrossfadeAudio.Runtime.Core.Generators.Crossfade
             {
                 InitialPosition01 = pos,
                 InitialCurve = initialCurve,
-                DefaultFadeSeconds = DefaultFadeSeconds
+                DefaultFadeSeconds = defaultFadeSeconds
             };
 
             // 子へ渡すフォーマット（親がネストされているならそれを優先、そうでなければ現行 AudioSettings）

@@ -57,7 +57,7 @@ namespace TomoLudens.CrossfadeAudio.Runtime.Core.Generators.Crossfade
 
             if (requestedFrames <= 0 || channels <= 0)
             {
-                return 0; // Result は int 返しで OK :contentReference[oaicite:9]{index=9}
+                return 0; // Result は int 返しで OK
             }
 
             buffer.Clear();

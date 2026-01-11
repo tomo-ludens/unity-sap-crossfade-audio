@@ -10,20 +10,15 @@ namespace TomoLudens.CrossfadeAudio.Runtime.Core.Generators.Clip
     [CreateAssetMenu(fileName = "ClipGenerator", menuName = "TomoLudens/CrossfadeAudio/Generators/ClipGenerator", order = 10)]
     public sealed class ClipGeneratorAsset : ScriptableObject, IAudioGenerator
     {
-        private readonly AudioClip _clip;
+        [SerializeField]
+        private AudioClip clip;
 
-        public bool loop;
-
-        [Range(min: 0.0f, max: 2.0f)]
-        public float gain = 1.0f;
+        [SerializeField] [Range(min: 0.0f, max: 2.0f)]
+        private float gain = 1.0f;
 
         public ResampleMode resampleMode = ResampleMode.Auto;
         public ResampleQuality resampleQuality = ResampleQuality.Linear;
-
-        public ClipGeneratorAsset(AudioClip clip)
-        {
-            _clip = clip;
-        }
+        public bool loop;
 
         public bool isFinite => !loop;
         public bool isRealtime => false;
@@ -43,21 +38,21 @@ namespace TomoLudens.CrossfadeAudio.Runtime.Core.Generators.Clip
                 IsValid = false
             };
 
-            // AudioClip.GetData は streamed では動かず、圧縮は DecompressOnLoad が必要。:contentReference[oaicite:4]{index=4}
-            if (_clip != null && ClipRequirements.CanUseGetData(clip: _clip) && ClipRequirements.EnsureLoaded(clip: _clip))
+            // AudioClip.GetData は streamed では動かず、圧縮は DecompressOnLoad が必要。
+            if (clip != null && ClipRequirements.CanUseGetData(clip: clip) && ClipRequirements.EnsureLoaded(clip: clip))
             {
-                int clipFrames = _clip.samples;
-                int clipChannels = _clip.channels;
+                int clipFrames = clip.samples;
+                int clipChannels = clip.channels;
                 int requiredFloats = clipFrames * clipChannels;
 
                 if (requiredFloats > 0)
                 {
                     realtime.ClipDataInterleaved = NativeBufferPool.Rent(length: requiredFloats);
 
-                    bool ok = _clip.GetData(data: realtime.ClipDataInterleaved, offsetSamples: 0);
+                    bool ok = clip.GetData(data: realtime.ClipDataInterleaved, offsetSamples: 0);
 
                     realtime.ClipChannels = clipChannels;
-                    realtime.ClipSampleRate = _clip.frequency;
+                    realtime.ClipSampleRate = clip.frequency;
                     realtime.ClipTotalFrames = clipFrames;
                     realtime.SourceFramePosition = 0.0f;
                     realtime.IsValid = ok;
