@@ -70,7 +70,6 @@ namespace SapCrossfadeAudio.Runtime.Core.Generators.Crossfade
 
         public void Update(ControlContext context, Pipe pipe)
         {
-            // No per-frame updates needed on Control side
         }
 
         public void Dispose(ControlContext context, ref CrossfadeGeneratorRealtime realtime)

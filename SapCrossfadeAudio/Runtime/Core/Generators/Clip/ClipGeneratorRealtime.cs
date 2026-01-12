@@ -40,7 +40,6 @@ namespace SapCrossfadeAudio.Runtime.Core.Generators.Clip
 
         public void Update(UpdatedDataContext context, Pipe pipe)
         {
-            // No events at this stage
         }
 
         public GeneratorInstance.Result Process(
@@ -49,18 +48,37 @@ namespace SapCrossfadeAudio.Runtime.Core.Generators.Clip
             ChannelBuffer buffer,
             GeneratorInstance.Arguments args)
         {
-            if (!IsValid)
+            int requestedFrames = buffer.frameCount;
+            if (requestedFrames <= 0 || buffer.channelCount <= 0)
             {
                 return 0;
             }
 
-            int requestedFrames = buffer.frameCount;
+            if (!IsValid)
+            {
+                ZeroFill(buffer: buffer, startFrame: 0, frameCount: requestedFrames);
+                // Fail-safe: keep AudioSource alive even if clip data is not ready/invalid.
+                return requestedFrames;
+            }
+
+            if (!ClipDataInterleaved.IsCreated || ClipChannels <= 0 || ClipTotalFrames <= 0 || ClipSampleRate <= 0 || OutputSampleRate <= 0 || OutputChannels <= 0)
+            {
+                ZeroFill(buffer: buffer, startFrame: 0, frameCount: requestedFrames);
+                return requestedFrames;
+            }
+
+            int requiredPcmFloats = ClipTotalFrames * ClipChannels;
+            if (requiredPcmFloats <= 0 || ClipDataInterleaved.Length < requiredPcmFloats)
+            {
+                ZeroFill(buffer: buffer, startFrame: 0, frameCount: requestedFrames);
+                return requestedFrames;
+            }
 
             // Channel mismatch: output silence (future: add up/down-mix support here)
             if (buffer.channelCount != OutputChannels || OutputChannels != ClipChannels)
             {
                 ZeroFill(buffer: buffer, startFrame: 0, frameCount: requestedFrames);
-                return buffer.frameCount;
+                return requestedFrames;
             }
 
             bool sampleRateMismatch = ClipSampleRate != OutputSampleRate;

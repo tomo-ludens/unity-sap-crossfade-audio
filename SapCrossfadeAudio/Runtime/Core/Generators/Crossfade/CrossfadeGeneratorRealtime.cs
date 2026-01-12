@@ -90,10 +90,9 @@ namespace SapCrossfadeAudio.Runtime.Core.Generators.Crossfade
             {
                 var spanA = BufferDataA.AsSpan().Slice(start: 0, length: requiredFloats);
                 childBufferA = new ChannelBuffer(buffer: spanA, channels: channels);
-                childBufferA.Clear();
 
                 var resultA = context.Process(generatorInstance: ChildA, buffer: childBufferA, args: args);
-                writtenA = SapCompat.GetProcessedFrames(result: in resultA);
+                writtenA = math.max(x: 0, y: SapCompat.GetProcessedFrames(result: in resultA));
 
                 if (SapCompat.IsShortWrite(result: in resultA, requestedFrames: requestedFrames))
                 {
@@ -105,10 +104,9 @@ namespace SapCrossfadeAudio.Runtime.Core.Generators.Crossfade
             {
                 var spanB = BufferDataB.AsSpan().Slice(start: 0, length: requiredFloats);
                 childBufferB = new ChannelBuffer(buffer: spanB, channels: channels);
-                childBufferB.Clear();
 
                 var resultB = context.Process(generatorInstance: ChildB, buffer: childBufferB, args: args);
-                writtenB = SapCompat.GetProcessedFrames(result: in resultB);
+                writtenB = math.max(x: 0, y: SapCompat.GetProcessedFrames(result: in resultB));
 
                 if (SapCompat.IsShortWrite(result: in resultB, requestedFrames: requestedFrames))
                 {
@@ -122,7 +120,9 @@ namespace SapCrossfadeAudio.Runtime.Core.Generators.Crossfade
             if (framesToProcess <= 0)
             {
                 buffer.Clear();
-                return 0;
+                // Important: return full requested frame count even when outputting silence.
+                // This generator is infinite (BGM mixer). Reporting 0 here can be interpreted as exhaustion and may stop playback.
+                return requestedFrames;
             }
 
             Mix(
@@ -131,6 +131,8 @@ namespace SapCrossfadeAudio.Runtime.Core.Generators.Crossfade
                 canUseB: canUseB,
                 childBufferA: ref childBufferA,
                 childBufferB: ref childBufferB,
+                writtenA: writtenA,
+                writtenB: writtenB,
                 frames: framesToProcess,
                 channels: channels);
 
@@ -168,6 +170,8 @@ namespace SapCrossfadeAudio.Runtime.Core.Generators.Crossfade
             bool canUseB,
             ref ChannelBuffer childBufferA,
             ref ChannelBuffer childBufferB,
+            int writtenA,
+            int writtenB,
             int frames,
             int channels)
         {
@@ -183,10 +187,13 @@ namespace SapCrossfadeAudio.Runtime.Core.Generators.Crossfade
 
                 (float wA, float wB) = EvaluateWeights(position01: pos, curve: CurrentCurve);
 
+                bool useA = canUseA && frame < writtenA;
+                bool useB = canUseB && frame < writtenB;
+
                 for (int ch = 0; ch < channels; ch++)
                 {
-                    float a = canUseA ? childBufferA[channel: ch, frame: frame] : 0.0f;
-                    float b = canUseB ? childBufferB[channel: ch, frame: frame] : 0.0f;
+                    float a = useA ? childBufferA[channel: ch, frame: frame] : 0.0f;
+                    float b = useB ? childBufferB[channel: ch, frame: frame] : 0.0f;
 
                     output[channel: ch, frame: frame] = a * wA + b * wB;
                 }

@@ -143,6 +143,18 @@ namespace SapCrossfadeAudio.Addressables
 
             try
             {
+                // In case a previous load attempt failed, ensure any old handle/cache is released before retrying.
+                if (_handle.IsValid())
+                {
+                    Addressables.Release(_handle);
+                    _handle = default;
+                }
+                if (_cachedPcm.IsCreated)
+                {
+                    _cachedPcm.Dispose();
+                    _cachedPcm = default;
+                }
+
                 _handle = Addressables.LoadAssetAsync<AudioClip>(_clipReference);
                 await _handle.Task;
 
@@ -165,6 +177,11 @@ namespace SapCrossfadeAudio.Addressables
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
                     Debug.LogError($"[AddressableClipGenerator] Load failed: {name}", this);
 #endif
+                    if (_handle.IsValid())
+                    {
+                        Addressables.Release(_handle);
+                        _handle = default;
+                    }
                 }
             }
             catch (System.Exception ex)
@@ -172,6 +189,12 @@ namespace SapCrossfadeAudio.Addressables
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
                 Debug.LogException(ex, this);
 #endif
+
+                if (_handle.IsValid())
+                {
+                    Addressables.Release(_handle);
+                    _handle = default;
+                }
             }
             finally
             {
@@ -251,36 +274,38 @@ namespace SapCrossfadeAudio.Addressables
                 var syncHandle = Addressables.LoadAssetAsync<AudioClip>(_clipReference);
                 var clip = syncHandle.WaitForCompletion();
 
-                if (clip != null && ClipRequirements.CanUseGetData(clip))
+                if (clip == null || !ClipRequirements.CanUseGetData(clip) || !ClipRequirements.EnsureLoaded(clip))
                 {
-                    if (ClipRequirements.EnsureLoaded(clip))
+                    if (syncHandle.IsValid())
                     {
-                        int frames = clip.samples;
-                        int channels = clip.channels;
-                        int requiredFloats = frames * channels;
+                        Addressables.Release(syncHandle);
+                    }
+                    return;
+                }
 
-                        if (requiredFloats > 0)
-                        {
-                            var pcm = NativeBufferPool.Rent(requiredFloats);
-                            if (clip.GetData(pcm, 0))
-                            {
-                                realtime.ClipDataInterleaved = pcm;
-                                realtime.ClipDataIsPooled = true;
-                                realtime.ClipChannels = channels;
-                                realtime.ClipSampleRate = clip.frequency;
-                                realtime.ClipTotalFrames = frames;
-                                realtime.SourceFramePosition = 0f;
-                                realtime.IsValid = true;
-                            }
-                            else
-                            {
-                                NativeBufferPool.Return(ref pcm);
-                            }
-                        }
+                int frames = clip.samples;
+                int channels = clip.channels;
+                int requiredFloats = frames * channels;
+
+                if (requiredFloats > 0)
+                {
+                    var pcm = NativeBufferPool.Rent(requiredFloats);
+                    if (clip.GetData(pcm, 0))
+                    {
+                        realtime.ClipDataInterleaved = pcm;
+                        realtime.ClipDataIsPooled = true;
+                        realtime.ClipChannels = channels;
+                        realtime.ClipSampleRate = clip.frequency;
+                        realtime.ClipTotalFrames = frames;
+                        realtime.SourceFramePosition = 0f;
+                        realtime.IsValid = true;
+                    }
+                    else
+                    {
+                        NativeBufferPool.Return(ref pcm);
                     }
                 }
 
-                // Keep handle for sync-loaded assets
                 _handle = syncHandle;
                 _loadedClip = clip;
             }

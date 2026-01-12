@@ -140,6 +140,9 @@ void Start()
 }
 ```
 
+`AddressableClipGeneratorAsset` には未 preload 時のフォールバックとして同期ロード（`WaitForCompletion()`）がありますが、
+CPU スパイク要因になるためデフォルトでは無効です（`_allowSynchronousLoadFallback` を明示的に有効化した場合のみ）。
+
 ### Step 3: クロスフェード実行
 
 ```csharp
@@ -473,6 +476,13 @@ Asset (SO)  ──CreateInstance()──►  GeneratorInstance
 
 - **バッファプール上限**: 8M floats ≒ 32MB
 - **サイズ別上限**: 8 個/サイズ
+
+`NativeBufferPool` は `Allocator.Persistent` を使用しますが、以下のタイミングで自動的に `Clear()` されます。
+
+- PlayMode 終了時（Editor）
+- Assembly reload 前（Editor）
+- SubsystemRegistration（初期化）
+- Application 終了時（Player）
 
 ---
 
