@@ -11,7 +11,7 @@ namespace SapCrossfadeAudio.Tests.Runtime
     /// Verifies command dispatch and IsValid checks.
     /// </summary>
     [TestFixture]
-    public sealed class CrossfadeHandleTests
+    public class CrossfadeHandleTests
     {
         private GameObject _testObject;
         private AudioSource _audioSource;

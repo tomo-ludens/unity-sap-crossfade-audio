@@ -10,7 +10,7 @@ namespace SapCrossfadeAudio.Tests.Editor
     /// Verifies Rent/Return/Clear operations, capacity limits, and idempotency.
     /// </summary>
     [TestFixture]
-    public sealed class NativeBufferPoolTests
+    public class NativeBufferPoolTests
     {
         [SetUp]
         public void SetUp()

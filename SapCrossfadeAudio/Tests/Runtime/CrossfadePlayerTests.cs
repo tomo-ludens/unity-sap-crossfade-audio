@@ -10,7 +10,7 @@ namespace SapCrossfadeAudio.Tests.Runtime
     /// Verifies MonoBehaviour integration and playback control.
     /// </summary>
     [TestFixture]
-    public sealed class CrossfadePlayerTests
+    public class CrossfadePlayerTests
     {
         private GameObject _testObject;
         private CrossfadePlayer _player;
