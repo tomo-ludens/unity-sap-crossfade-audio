@@ -1,7 +1,7 @@
 namespace SapCrossfadeAudio.Runtime.Core.Types
 {
     /// <summary>
-    /// Realtime側（audio thread）でそのまま消費できる形式に変換したパラメータ。
+    /// Parameters converted to a format directly consumable by the Realtime (audio thread).
     /// </summary>
     internal readonly struct CrossfadeRealtimeParams
     {

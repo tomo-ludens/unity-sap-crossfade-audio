@@ -3,7 +3,7 @@ using UnityEngine;
 namespace SapCrossfadeAudio.Runtime.Core.Foundation
 {
     /// <summary>
-    /// AudioClip.GetData 前提の要件（Import設定・Load状態）をガードする。
+    /// Validates AudioClip requirements for GetData (import settings and load state).
     /// </summary>
     public static class ClipRequirements
     {
@@ -11,10 +11,10 @@ namespace SapCrossfadeAudio.Runtime.Core.Foundation
         {
             if (clip == null) return false;
 
-            // GetData は streamed audio clips では動作しない（仕様）
+            // GetData does not work with streaming audio clips (Unity specification)
             if (clip.loadType == AudioClipLoadType.Streaming) return false;
 
-            // 圧縮音源は DecompressOnLoad のみ確実に取得できる（仕様）
+            // Compressed audio requires DecompressOnLoad for reliable PCM access
             return clip.loadType == AudioClipLoadType.DecompressOnLoad;
         }
 

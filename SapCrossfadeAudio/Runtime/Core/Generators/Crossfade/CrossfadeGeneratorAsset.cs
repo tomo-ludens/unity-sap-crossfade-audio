@@ -87,6 +87,11 @@ namespace SapCrossfadeAudio.Runtime.Core.Generators.Crossfade
                 : DefaultChannelCount;
             int requiredFloats = bufferFrameCount * channels;
 
+            // Initialize fade state early to prevent audio leakage before Configure() runs
+            realtime.FadePosition01 = pos;
+            realtime.TargetPosition01 = pos;
+            realtime.CurrentCurve = initialCurve;
+
             if (requiredFloats <= 0)
             {
                 return context.AllocateGenerator(

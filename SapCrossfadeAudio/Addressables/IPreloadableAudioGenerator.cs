@@ -3,26 +3,24 @@ using System.Threading.Tasks;
 namespace SapCrossfadeAudio.Addressables
 {
     /// <summary>
-    /// 事前ロードが可能な AudioGenerator のインターフェース。
-    /// Addressables や外部リソースを使用する Generator が実装する。
+    /// Interface for AudioGenerators that support preloading.
+    /// Implemented by generators using Addressables or external resources.
     /// </summary>
     public interface IPreloadableAudioGenerator
     {
         /// <summary>
-        /// アセットがロード済みで、再生可能な状態かどうか。
+        /// Whether the asset is loaded and ready for playback.
         /// </summary>
         bool IsReady { get; }
 
         /// <summary>
-        /// アセットを事前にロードする。
-        /// 呼び出し元は完了を待ってから再生を開始することで、ヒッチを回避できる。
+        /// Preloads the asset asynchronously.
+        /// Caller should await completion before playback to avoid hitches.
         /// </summary>
-        /// <returns>ロード完了を待つタスク</returns>
         Task PreloadAsync();
 
         /// <summary>
-        /// ロードしたアセットを解放する。
-        /// このメソッドは冪等（何度呼んでも安全）でなければならない。
+        /// Releases the loaded asset. This method must be idempotent (safe to call multiple times).
         /// </summary>
         void Release();
     }

@@ -11,15 +11,15 @@ namespace SapCrossfadeAudio.Runtime.Core.Foundation
             => result.processedFrames;
 
         /// <summary>
-        /// 子が要求フレームを満たせなかった（終端・枯渇・失敗など）ことを示す。
-        /// 親は不足分を 0 埋めし、必要なら「子 finished」扱いへ遷移する。
+        /// Indicates child failed to produce requested frames (end of stream, exhausted, or error).
+        /// Parent should zero-fill the remaining frames and optionally mark child as finished.
         /// </summary>
         [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
         public static bool IsShortWrite(in GeneratorInstance.Result result, int requestedFrames)
             => result.processedFrames < requestedFrames;
 
         /// <summary>
-        /// 明確に何も出てこなかった（0 フレーム）＝終了扱いに寄せる。
+        /// Returns true if no frames were produced (0 frames), indicating stream exhaustion.
         /// </summary>
         [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
         public static bool IsExhausted(in GeneratorInstance.Result result)

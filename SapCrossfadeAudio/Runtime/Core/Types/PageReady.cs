@@ -1,7 +1,7 @@
 namespace SapCrossfadeAudio.Runtime.Core.Types
 {
     /// <summary>
-    /// Paging/Streaming 用：Control→Realtime に「ページが用意できた」ことを伝えるメッセージ。
+    /// Paging/Streaming message: notifies Realtime that a page is ready from Control.
     /// </summary>
     internal readonly struct PageReady
     {

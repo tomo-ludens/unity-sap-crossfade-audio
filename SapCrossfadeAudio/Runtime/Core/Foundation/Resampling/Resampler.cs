@@ -10,7 +10,7 @@ namespace SapCrossfadeAudio.Runtime.Core.Foundation.Resampling
             switch (q)
             {
                 case ResampleQuality.Nearest:
-                    // 最近傍：t<0.5 は x0、t>=0.5 は x1
+                    // Nearest neighbor: t < 0.5 uses x0, t >= 0.5 uses x1
                     return (t < 0.5f) ? x0 : x1;
 
                 case ResampleQuality.Hermite4:
@@ -18,7 +18,6 @@ namespace SapCrossfadeAudio.Runtime.Core.Foundation.Resampling
 
                 case ResampleQuality.Linear:
                 default:
-                    // Linear
                     return x0 + (x1 - x0) * t;
             }
         }

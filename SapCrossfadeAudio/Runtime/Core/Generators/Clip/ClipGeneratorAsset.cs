@@ -40,7 +40,7 @@ namespace SapCrossfadeAudio.Runtime.Core.Generators.Clip
                 IsValid = false
             };
 
-            // AudioClip.GetData は streamed では動かず、圧縮は DecompressOnLoad が必要。
+            // AudioClip.GetData requires DecompressOnLoad; streaming clips are not supported
             if (clip != null && ClipRequirements.CanUseGetData(clip: clip) && ClipRequirements.EnsureLoaded(clip: clip))
             {
                 int clipFrames = clip.samples;
@@ -67,7 +67,6 @@ namespace SapCrossfadeAudio.Runtime.Core.Generators.Clip
                 resampleMode: resampleMode,
                 resampleQuality: resampleQuality);
 
-            // 公式例：AllocateGenerator(realtime, control, nestedConfiguration, creationParameters)
             return context.AllocateGenerator(realtimeState: realtime, controlState: control, nestedFormat: nestedConfiguration, creationParameters: creationParameters);
         }
     }

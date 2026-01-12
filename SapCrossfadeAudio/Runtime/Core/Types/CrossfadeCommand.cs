@@ -3,8 +3,8 @@ using System.Runtime.CompilerServices;
 namespace SapCrossfadeAudio.Runtime.Core.Types
 {
     /// <summary>
-    /// Crossfade のターゲットと遷移時間（秒）、カーブを指定するコマンド。
-    /// Control -> Realtime は Pipe 経由で渡す想定（unmanaged）。
+    /// Command specifying crossfade target position, duration, and curve.
+    /// Passed from Control to Realtime via Pipe (unmanaged struct).
     /// </summary>
     public struct CrossfadeCommand
     {
