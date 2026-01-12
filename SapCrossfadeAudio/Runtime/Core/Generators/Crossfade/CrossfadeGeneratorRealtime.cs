@@ -64,8 +64,6 @@ namespace SapCrossfadeAudio.Runtime.Core.Generators.Crossfade
                 return 0;
             }
 
-            buffer.Clear();
-
             int requiredFloats = requestedFrames * channels;
 
             bool canUseA =
@@ -123,6 +121,7 @@ namespace SapCrossfadeAudio.Runtime.Core.Generators.Crossfade
 
             if (framesToProcess <= 0)
             {
+                buffer.Clear();
                 return 0;
             }
 
@@ -134,6 +133,11 @@ namespace SapCrossfadeAudio.Runtime.Core.Generators.Crossfade
                 childBufferB: ref childBufferB,
                 frames: framesToProcess,
                 channels: channels);
+
+            if (framesToProcess < requestedFrames)
+            {
+                ChannelBufferCompat.ClearRange(buffer: buffer, startFrame: framesToProcess, frameCount: requestedFrames - framesToProcess);
+            }
 
             return framesToProcess;
         }
@@ -218,11 +222,16 @@ namespace SapCrossfadeAudio.Runtime.Core.Generators.Crossfade
                 default:
                 {
                     float t = p * HalfPi;
-                    float wA = math.cos(x: t);
-                    float wB = math.sin(x: t);
+                    math.sincos(x: t, s: out float wB, c: out float wA);
                     return (wA, wB);
                 }
             }
+        }
+
+        [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
+        internal static (float wA, float wB) EvaluateWeightsForTesting(float position01, CrossfadeCurve curve)
+        {
+            return EvaluateWeights(position01: position01, curve: curve);
         }
     }
 }

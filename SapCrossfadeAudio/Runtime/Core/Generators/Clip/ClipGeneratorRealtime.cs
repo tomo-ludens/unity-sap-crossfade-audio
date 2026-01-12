@@ -16,6 +16,7 @@ namespace SapCrossfadeAudio.Runtime.Core.Generators.Clip
     {
         // PCM data in interleaved format (frames * channels)
         internal NativeArray<float> ClipDataInterleaved;
+        internal bool ClipDataIsPooled;
         internal int ClipChannels;
         internal int ClipSampleRate;
         internal int ClipTotalFrames;

@@ -1,5 +1,7 @@
 using NUnit.Framework;
 using SapCrossfadeAudio.Runtime.Core.Foundation.Resampling;
+using SapCrossfadeAudio.Runtime.Core.Generators.Crossfade;
+using SapCrossfadeAudio.Runtime.Core.Types;
 
 namespace SapCrossfadeAudio.Tests.Editor
 {
@@ -238,6 +240,28 @@ namespace SapCrossfadeAudio.Tests.Editor
 
             // Assert - Default should behave like Linear
             Assert.AreEqual(expected: linearResult, actual: defaultResult, delta: Tolerance);
+        }
+
+        [Test]
+        public void CrossfadeWeights_AtPosition0_TargetBIsSilent_ForAllCurves()
+        {
+            foreach (var curve in (CrossfadeCurve[])System.Enum.GetValues(enumType: typeof(CrossfadeCurve)))
+            {
+                (float wA, float wB) = CrossfadeGeneratorRealtime.EvaluateWeightsForTesting(position01: 0f, curve: curve);
+                Assert.AreEqual(expected: 1f, actual: wA, delta: Tolerance, message: $"curve={curve}");
+                Assert.AreEqual(expected: 0f, actual: wB, delta: Tolerance, message: $"curve={curve}");
+            }
+        }
+
+        [Test]
+        public void CrossfadeWeights_AtPosition1_TargetAIsSilent_ForAllCurves()
+        {
+            foreach (var curve in (CrossfadeCurve[])System.Enum.GetValues(enumType: typeof(CrossfadeCurve)))
+            {
+                (float wA, float wB) = CrossfadeGeneratorRealtime.EvaluateWeightsForTesting(position01: 1f, curve: curve);
+                Assert.AreEqual(expected: 0f, actual: wA, delta: Tolerance, message: $"curve={curve}");
+                Assert.AreEqual(expected: 1f, actual: wB, delta: Tolerance, message: $"curve={curve}");
+            }
         }
     }
 }

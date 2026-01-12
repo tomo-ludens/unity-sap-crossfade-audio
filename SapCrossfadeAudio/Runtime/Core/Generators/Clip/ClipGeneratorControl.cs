@@ -32,11 +32,16 @@ namespace SapCrossfadeAudio.Runtime.Core.Generators.Clip
 
         public void Dispose(ControlContext context, ref ClipGeneratorRealtime realtime)
         {
-            if (realtime.ClipDataInterleaved.IsCreated)
+            if (realtime is { ClipDataIsPooled: true, ClipDataInterleaved: { IsCreated: true } })
             {
                 NativeBufferPool.Return(array: ref realtime.ClipDataInterleaved);
             }
+            else
+            {
+                realtime.ClipDataInterleaved = default;
+            }
 
+            realtime.ClipDataIsPooled = false;
             realtime.IsValid = false;
         }
 

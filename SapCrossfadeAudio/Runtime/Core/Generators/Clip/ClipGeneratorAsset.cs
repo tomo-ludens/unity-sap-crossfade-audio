@@ -48,6 +48,7 @@ namespace SapCrossfadeAudio.Runtime.Core.Generators.Clip
                 if (requiredFloats > 0)
                 {
                     realtime.ClipDataInterleaved = NativeBufferPool.Rent(length: requiredFloats);
+                    realtime.ClipDataIsPooled = true;
 
                     bool ok = clip.GetData(data: realtime.ClipDataInterleaved, offsetSamples: 0);
 

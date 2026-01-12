@@ -45,6 +45,10 @@ namespace SapCrossfadeAudio.Addressables
         [SerializeField]
         private ResampleQuality _resampleQuality = ResampleQuality.Linear;
 
+        [Header("Advanced")]
+        [SerializeField]
+        private bool _allowSynchronousLoadFallback;
+
         // Internal state (volatile for safe cross-context reads in async workflows)
         private AsyncOperationHandle<AudioClip> _handle;
         private AudioClip _loadedClip;
@@ -78,7 +82,11 @@ namespace SapCrossfadeAudio.Addressables
                 int clipFrames = _loadedClip.samples;
                 int clipChannels = _loadedClip.channels;
 
-                realtime.ClipDataInterleaved = _cachedPcm;
+                var pcm = NativeBufferPool.Rent(length: _cachedPcm.Length);
+                NativeArray<float>.Copy(src: _cachedPcm, dst: pcm);
+
+                realtime.ClipDataInterleaved = pcm;
+                realtime.ClipDataIsPooled = true;
                 realtime.ClipChannels = clipChannels;
                 realtime.ClipSampleRate = _loadedClip.frequency;
                 realtime.ClipTotalFrames = clipFrames;
@@ -86,7 +94,7 @@ namespace SapCrossfadeAudio.Addressables
                 realtime.IsValid = true;
             }
             // Fallback: synchronous load if not preloaded (not recommended but fail-safe)
-            else if (_clipReference != null && _clipReference.RuntimeKeyIsValid())
+            else if (_allowSynchronousLoadFallback && _clipReference != null && _clipReference.RuntimeKeyIsValid())
             {
                 TryLoadSynchronously(ref realtime);
             }
@@ -257,6 +265,7 @@ namespace SapCrossfadeAudio.Addressables
                             if (clip.GetData(pcm, 0))
                             {
                                 realtime.ClipDataInterleaved = pcm;
+                                realtime.ClipDataIsPooled = true;
                                 realtime.ClipChannels = channels;
                                 realtime.ClipSampleRate = clip.frequency;
                                 realtime.ClipTotalFrames = frames;
