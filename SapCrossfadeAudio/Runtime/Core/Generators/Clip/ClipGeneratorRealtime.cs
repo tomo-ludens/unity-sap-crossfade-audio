@@ -85,8 +85,8 @@ namespace SapCrossfadeAudio.Runtime.Core.Generators.Clip
 
             if (ResampleMode == ResampleMode.Off && sampleRateMismatch)
             {
-                // Legacy compat: mismatch treated as exhausted (parent handles zero-fill)
-                return 0;
+                ZeroFill(buffer: buffer, startFrame: 0, frameCount: requestedFrames);
+                return requestedFrames;
             }
 
             bool doResample = ResampleMode == ResampleMode.Force || sampleRateMismatch;

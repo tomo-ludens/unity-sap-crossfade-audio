@@ -6,11 +6,11 @@ namespace SapCrossfadeAudio.Runtime.Core.Types
     /// Command specifying crossfade target position, duration, and curve.
     /// Passed from Control to Realtime via Pipe (unmanaged struct).
     /// </summary>
-    public struct CrossfadeCommand
+    internal struct CrossfadeCommand
     {
-        public float TargetPosition01;   // 0..1
-        public float DurationSeconds;    // >=0
-        public CrossfadeCurve Curve;
+        internal float TargetPosition01;   // 0..1
+        internal float DurationSeconds;    // >=0
+        internal CrossfadeCurve Curve;
 
         [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
         public static CrossfadeCommand Create(float targetPosition01, float durationSeconds, CrossfadeCurve curve)

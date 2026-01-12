@@ -10,7 +10,7 @@ namespace SapCrossfadeAudio.Tests.Editor
     /// Verifies interpolation accuracy for each quality level (Nearest/Linear/Hermite4).
     /// </summary>
     [TestFixture]
-    public class ResamplerTests
+    public sealed class ResamplerTests
     {
         private const float Tolerance = 0.0001f;
 

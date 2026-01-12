@@ -8,7 +8,7 @@ namespace SapCrossfadeAudio.Tests.Editor
     /// Verifies Create method and field values.
     /// </summary>
     [TestFixture]
-    public class CrossfadeCommandTests
+    public sealed class CrossfadeCommandTests
     {
         private const float Tolerance = 0.0001f;
 

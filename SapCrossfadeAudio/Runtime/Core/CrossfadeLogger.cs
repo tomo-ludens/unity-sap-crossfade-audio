@@ -20,40 +20,32 @@ namespace SapCrossfadeAudio.Runtime.Core
         private const string InfraTag = "SapCrossfadeAudio";
         private const string InfraPrefix = "[" + InfraTag + "] ";
 
-        private static class TypeTagCache<T>
-        {
-            // ReSharper disable StaticMemberInGenericType
-            private static readonly string Tag = typeof(T).FullName ?? typeof(T).Name;
-            internal static readonly string Prefix = "[" + Tag + "] ";
-            // ReSharper restore StaticMemberInGenericType
-        }
-
         [Conditional(conditionString: EditorSymbol), Conditional(conditionString: DevBuildSymbol), Conditional(conditionString: AssertionsSymbol)]
-        public static void Log(string message, UnityEngine.Object context = null)
+        internal static void Log(string message, UnityEngine.Object context = null)
             => Debug.Log(message: InfraPrefix + message, context: context);
 
         [Conditional(conditionString: EditorSymbol), Conditional(conditionString: DevBuildSymbol), Conditional(conditionString: AssertionsSymbol)]
-        public static void Log<T>(string message, UnityEngine.Object context = null)
-            => Debug.Log(message: TypeTagCache<T>.Prefix + message, context: context);
+        internal static void Log<T>(string message, UnityEngine.Object context = null)
+            => Debug.Log(message: CrossfadeLoggerTypeTagCache<T>.Prefix + message, context: context);
 
         [Conditional(conditionString: EditorSymbol), Conditional(conditionString: DevBuildSymbol), Conditional(conditionString: AssertionsSymbol)]
-        public static void LogWarning(string message, UnityEngine.Object context = null)
+        internal static void LogWarning(string message, UnityEngine.Object context = null)
             => Debug.LogWarning(message: InfraPrefix + message, context: context);
 
         [Conditional(conditionString: EditorSymbol), Conditional(conditionString: DevBuildSymbol), Conditional(conditionString: AssertionsSymbol)]
-        public static void LogWarning<T>(string message, UnityEngine.Object context = null)
-            => Debug.LogWarning(message: TypeTagCache<T>.Prefix + message, context: context);
+        internal static void LogWarning<T>(string message, UnityEngine.Object context = null)
+            => Debug.LogWarning(message: CrossfadeLoggerTypeTagCache<T>.Prefix + message, context: context);
 
         [Conditional(conditionString: EditorSymbol), Conditional(conditionString: DevBuildSymbol), Conditional(conditionString: AssertionsSymbol)]
-        public static void LogError(string message, UnityEngine.Object context = null)
+        internal static void LogError(string message, UnityEngine.Object context = null)
             => Debug.LogError(message: InfraPrefix + message, context: context);
 
         [Conditional(conditionString: EditorSymbol), Conditional(conditionString: DevBuildSymbol), Conditional(conditionString: AssertionsSymbol)]
-        public static void LogError<T>(string message, UnityEngine.Object context = null)
-            => Debug.LogError(message: TypeTagCache<T>.Prefix + message, context: context);
+        internal static void LogError<T>(string message, UnityEngine.Object context = null)
+            => Debug.LogError(message: CrossfadeLoggerTypeTagCache<T>.Prefix + message, context: context);
 
         [Conditional(conditionString: EditorSymbol), Conditional(conditionString: DevBuildSymbol), Conditional(conditionString: AssertionsSymbol)]
-        public static void LogException(Exception exception, UnityEngine.Object context = null)
+        internal static void LogException(Exception exception, UnityEngine.Object context = null)
         {
             if (exception == null) return;
 
@@ -62,7 +54,7 @@ namespace SapCrossfadeAudio.Runtime.Core
         }
 
         [Conditional(conditionString: EditorSymbol), Conditional(conditionString: DevBuildSymbol), Conditional(conditionString: AssertionsSymbol)]
-        public static void LogException<T>(Exception exception, UnityEngine.Object context = null)
+        internal static void LogException<T>(Exception exception, UnityEngine.Object context = null)
         {
             if (exception == null) return;
 

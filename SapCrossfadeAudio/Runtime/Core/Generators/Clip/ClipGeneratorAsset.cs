@@ -1,5 +1,6 @@
 using Unity.IntegerTime;
 using UnityEngine;
+using UnityEngine.Serialization;
 using UnityEngine.Audio;
 using SapCrossfadeAudio.Runtime.Core.Foundation;
 using SapCrossfadeAudio.Runtime.Core.Foundation.Resampling;
@@ -16,11 +17,37 @@ namespace SapCrossfadeAudio.Runtime.Core.Generators.Clip
         [SerializeField] [Range(min: 0.0f, max: 2.0f)]
         private float gain = 1.0f;
 
-        public ResampleMode resampleMode = ResampleMode.Auto;
-        public ResampleQuality resampleQuality = ResampleQuality.Linear;
-        public bool loop;
+        [SerializeField]
+        [FormerlySerializedAs("resampleMode")]
+        private ResampleMode _resampleMode = ResampleMode.Auto;
 
-        public bool isFinite => !loop;
+        [SerializeField]
+        [FormerlySerializedAs("resampleQuality")]
+        private ResampleQuality _resampleQuality = ResampleQuality.Linear;
+
+        [SerializeField]
+        [FormerlySerializedAs("loop")]
+        private bool _loop;
+
+        public ResampleMode resampleMode
+        {
+            get => _resampleMode;
+            set => _resampleMode = value;
+        }
+
+        public ResampleQuality resampleQuality
+        {
+            get => _resampleQuality;
+            set => _resampleQuality = value;
+        }
+
+        public bool loop
+        {
+            get => _loop;
+            set => _loop = value;
+        }
+
+        public bool isFinite => !_loop;
         public bool isRealtime => false;
         public DiscreteTime? length => null;
 
@@ -31,10 +58,10 @@ namespace SapCrossfadeAudio.Runtime.Core.Generators.Clip
         {
             var realtime = new ClipGeneratorRealtime
             {
-                Loop = loop,
+                Loop = _loop,
                 Gain = gain,
-                ResampleMode = resampleMode,
-                ResampleQuality = resampleQuality,
+                ResampleMode = _resampleMode,
+                ResampleQuality = _resampleQuality,
                 IsValid = false
             };
 
@@ -61,10 +88,10 @@ namespace SapCrossfadeAudio.Runtime.Core.Generators.Clip
             }
 
             var control = new ClipGeneratorControl(
-                loop: loop,
+                loop: _loop,
                 gain: gain,
-                resampleMode: resampleMode,
-                resampleQuality: resampleQuality);
+                resampleMode: _resampleMode,
+                resampleQuality: _resampleQuality);
 
             return context.AllocateGenerator(realtimeState: realtime, controlState: control, nestedFormat: nestedConfiguration, creationParameters: creationParameters);
         }

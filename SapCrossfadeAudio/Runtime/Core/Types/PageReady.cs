@@ -5,12 +5,12 @@ namespace SapCrossfadeAudio.Runtime.Core.Types
     /// </summary>
     internal readonly struct PageReady
     {
-        public readonly int Slot;
-        public readonly int ValidFrames;
-        public readonly int StartFrame;
-        public readonly byte Flags; // bit0: EOS
+        internal readonly int Slot;
+        internal readonly int ValidFrames;
+        internal readonly int StartFrame;
+        internal readonly byte Flags; // bit0: EOS
 
-        public PageReady(int slot, int validFrames, int startFrame, byte flags)
+        internal PageReady(int slot, int validFrames, int startFrame, byte flags)
         {
             this.Slot = slot;
             this.ValidFrames = validFrames;

@@ -146,17 +146,11 @@ CPU スパイク要因になるためデフォルトでは無効です（`_allow
 ### Step 3: クロスフェード実行
 
 ```csharp
+using SapCrossfadeAudio.Runtime.Core.Integration;
 using SapCrossfadeAudio.Runtime.Core.Types;
-using UnityEngine.Audio;
 
-// CrossfadeCommand を送信
-var command = CrossfadeCommand.Create(
-    targetPosition01: 1f,      // 0=A, 1=B
-    durationSeconds: 2f,       // フェード時間
-    curve: CrossfadeCurve.EqualPower
-);
-
-ControlContext.builtIn.SendMessage(audioSource.generatorInstance, ref command);
+var handle = CrossfadeHandle.FromAudioSource(audioSource);
+handle.TryCrossfade(targetPosition01: 1f, durationSeconds: 2f, curve: CrossfadeCurve.EqualPower);
 ```
 
 ---
@@ -167,8 +161,8 @@ ControlContext.builtIn.SendMessage(audioSource.generatorInstance, ref command);
 
 ```csharp
 using UnityEngine;
+using SapCrossfadeAudio.Runtime.Core.Integration;
 using SapCrossfadeAudio.Runtime.Core.Types;
-using UnityEngine.Audio;
 
 public class BgmController : MonoBehaviour
 {
@@ -176,20 +170,14 @@ public class BgmController : MonoBehaviour
 
     public void CrossfadeToTrackB(float duration = 2f)
     {
-        if (!ControlContext.builtIn.Exists(_audioSource.generatorInstance))
-            return;
-
-        var cmd = CrossfadeCommand.Create(1f, duration, CrossfadeCurve.EqualPower);
-        ControlContext.builtIn.SendMessage(_audioSource.generatorInstance, ref cmd);
+        var handle = CrossfadeHandle.FromAudioSource(_audioSource);
+        handle.TryCrossfadeToB(durationSeconds: duration, curve: CrossfadeCurve.EqualPower);
     }
 
     public void CrossfadeToTrackA(float duration = 2f)
     {
-        if (!ControlContext.builtIn.Exists(_audioSource.generatorInstance))
-            return;
-
-        var cmd = CrossfadeCommand.Create(0f, duration, CrossfadeCurve.EqualPower);
-        ControlContext.builtIn.SendMessage(_audioSource.generatorInstance, ref cmd);
+        var handle = CrossfadeHandle.FromAudioSource(_audioSource);
+        handle.TryCrossfadeToA(durationSeconds: duration, curve: CrossfadeCurve.EqualPower);
     }
 }
 ```
@@ -198,12 +186,8 @@ public class BgmController : MonoBehaviour
 
 ```csharp
 // フェードなしで即座に切り替え
-var cmd = CrossfadeCommand.Create(
-    targetPosition01: 1f,
-    durationSeconds: 0f,  // 即時
-    curve: CrossfadeCurve.Linear
-);
-ControlContext.builtIn.SendMessage(audioSource.generatorInstance, ref cmd);
+var handle = CrossfadeHandle.FromAudioSource(audioSource);
+handle.TrySetImmediate(position01: 1f);
 ```
 
 ### Advanced: カスタムカーブの選択
@@ -312,24 +296,6 @@ public class AddressableBgmManager : MonoBehaviour
 
 ## API Reference
 
-### CrossfadeCommand
-
-クロスフェード操作を指示するコマンド構造体。
-
-```csharp
-public struct CrossfadeCommand
-{
-    public float TargetPosition01;   // 0.0 = Source A, 1.0 = Source B
-    public float DurationSeconds;    // フェード時間（秒）
-    public CrossfadeCurve Curve;     // フェードカーブ
-
-    public static CrossfadeCommand Create(
-        float targetPosition01,
-        float durationSeconds,
-        CrossfadeCurve curve);
-}
-```
-
 ### CrossfadeCurve
 
 ```csharp
@@ -349,7 +315,6 @@ public enum CrossfadeCurve
 | `sourceB` | `ScriptableObject` | ソース B（IAudioGenerator） |
 | `initialPosition01` | `float` | 初期フェード位置（0-1） |
 | `initialCurve` | `CrossfadeCurve` | 初期カーブ |
-| `defaultFadeSeconds` | `float` | デフォルトフェード秒数 |
 
 ### CrossfadeHandle
 
@@ -494,10 +459,14 @@ SapCrossfadeAudio/
 │   ├── AddressableClipGeneratorAsset.cs                 # Addressables AudioClip generator
 │   ├── IPreloadableAudioGenerator.cs                    # Preload interface
 │   └── SapCrossfadeAudio.Addressables.asmdef
+├── Editor/
+│   ├── NativeBufferPoolEditorCleanup.cs                  # Editor cleanup hooks
+│   └── SapCrossfadeAudio.Editor.asmdef
 ├── Runtime/
 │   └── Core/
 │       ├── AssemblyInfo.cs                              # InternalsVisibleTo (for tests)
 │       ├── CrossfadeLogger.cs                           # Conditional logger
+│       ├── CrossfadeLoggerTypeTagCache.cs                # Logger type tag cache
 │       ├── SapCrossfadeAudio.Core.asmdef                # Core asmdef (Burst only)
 │       ├── Components/
 │       │   └── CrossfadePlayer.cs                       # MonoBehaviour wrapper
@@ -522,7 +491,7 @@ SapCrossfadeAudio/
 │       ├── Integration/
 │       │   └── CrossfadeHandle.cs                       # Non-MonoBehaviour control
 │       └── Types/
-│           ├── CrossfadeCommand.cs                      # Crossfade command struct
+│           ├── CrossfadeCommand.cs                      # Crossfade command struct (internal)
 │           ├── CrossfadeCurve.cs                        # EqualPower/Linear/SCurve enum
 │           ├── CrossfadeRealtimeParams.cs               # Realtime parameters
 │           ├── IPcmPageProvider.cs                      # PCM streaming interface
@@ -556,7 +525,7 @@ SapCrossfadeAudio/
 |----------|------------|----------|
 | **EditMode** | `NativeBufferPoolTests` | Rent/Return, pool limits, idempotency |
 | **EditMode** | `ResamplerTests` | Nearest/Linear/Hermite4 interpolation accuracy |
-| **EditMode** | `CrossfadeCommandTests` | Command creation, field validation |
+| **EditMode** | `CrossfadeCommandTests` | Internal crossfade command creation, field validation |
 | **PlayMode** | `CrossfadeHandleTests` | Command dispatch, IsValid checks |
 | **PlayMode** | `CrossfadePlayerTests` | MonoBehaviour integration, playback control |
 

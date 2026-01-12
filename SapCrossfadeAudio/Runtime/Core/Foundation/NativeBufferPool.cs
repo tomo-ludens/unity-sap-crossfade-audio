@@ -7,9 +7,8 @@ namespace SapCrossfadeAudio.Runtime.Core.Foundation
     /// <summary>
     /// Simple NativeArray pool for Control-side only. Reduces alloc/free overhead during frequent Reconfigure.
     /// WARNING: This pool uses Allocator.Persistent, meaning it will NOT be garbage collected automatically.
-    /// It is the user's responsibility to call Clear() on shutdown to prevent memory leaks.
     /// </summary>
-    public static class NativeBufferPool
+    internal static class NativeBufferPool
     {
         private const int MaxPerSize = 8;
         private const long MaxTotalFloats = 8L * 1024L * 1024L; // 8M floats ≈ 32MB
@@ -41,7 +40,7 @@ namespace SapCrossfadeAudio.Runtime.Core.Foundation
         private static long _sTotalPooledFloats;
         private static readonly Dictionary<int, Stack<NativeArray<float>>> SPool = new();
 
-        public static NativeArray<float> Rent(int length)
+        internal static NativeArray<float> Rent(int length)
         {
             if (length <= 0) return default;
 
@@ -61,7 +60,7 @@ namespace SapCrossfadeAudio.Runtime.Core.Foundation
             return arr;
         }
 
-        public static void Return(ref NativeArray<float> array)
+        internal static void Return(ref NativeArray<float> array)
         {
             if (!array.IsCreated)
             {
@@ -97,7 +96,7 @@ namespace SapCrossfadeAudio.Runtime.Core.Foundation
             array = default;
         }
 
-        public static void Clear()
+        internal static void Clear()
         {
             // NativeArrays in this pool use Allocator.Persistent and remain allocated until cleared.
             foreach (var stack in SPool.Values)

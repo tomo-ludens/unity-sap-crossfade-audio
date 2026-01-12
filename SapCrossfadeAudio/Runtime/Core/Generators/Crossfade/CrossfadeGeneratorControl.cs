@@ -11,12 +11,11 @@ namespace SapCrossfadeAudio.Runtime.Core.Generators.Crossfade
     /// <summary>
     /// Control-side state for CrossfadeGenerator. Handles configuration, message routing, and resource cleanup.
     /// </summary>
-    public struct CrossfadeGeneratorControl : GeneratorInstance.IControl<CrossfadeGeneratorRealtime>
+    internal struct CrossfadeGeneratorControl : GeneratorInstance.IControl<CrossfadeGeneratorRealtime>
     {
         private const int DefaultChannelCount = 2;
-        public float InitialPosition01;
-        public CrossfadeCurve InitialCurve;
-        public float DefaultFadeSeconds;
+        internal float InitialPosition01;
+        internal CrossfadeCurve InitialCurve;
 
         public void Configure(
             ControlContext context,

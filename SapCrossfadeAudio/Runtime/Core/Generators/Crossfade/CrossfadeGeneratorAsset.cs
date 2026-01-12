@@ -1,5 +1,6 @@
 using Unity.IntegerTime;
 using UnityEngine;
+using UnityEngine.Serialization;
 using UnityEngine.Audio;
 using SapCrossfadeAudio.Runtime.Core.Foundation;
 using SapCrossfadeAudio.Runtime.Core.Types;
@@ -15,18 +16,39 @@ namespace SapCrossfadeAudio.Runtime.Core.Generators.Crossfade
     {
         private const int DefaultChannelCount = 2;
         [Header(header: "Sources (must implement IAudioGenerator)")]
-        public ScriptableObject sourceA;
-        public ScriptableObject sourceB;
+        [SerializeField]
+        [FormerlySerializedAs("sourceA")]
+        private ScriptableObject _sourceA;
+
+        [SerializeField]
+        [FormerlySerializedAs("sourceB")]
+        private ScriptableObject _sourceB;
 
         [Header(header: "Initial State")]
         [SerializeField]
         private CrossfadeCurve initialCurve = CrossfadeCurve.EqualPower;
 
         [SerializeField] [Range(min: 0.0f, max: 1.0f)]
-        public float initialPosition01;
+        [FormerlySerializedAs("initialPosition01")]
+        private float _initialPosition01;
 
-        [SerializeField] [Min(min: 0.0f)]
-        private float defaultFadeSeconds = 0.25f;
+        public ScriptableObject sourceA
+        {
+            get => _sourceA;
+            set => _sourceA = value;
+        }
+
+        public ScriptableObject sourceB
+        {
+            get => _sourceB;
+            set => _sourceB = value;
+        }
+
+        public float initialPosition01
+        {
+            get => _initialPosition01;
+            set => _initialPosition01 = value;
+        }
 
         public bool isFinite => false;
         public bool isRealtime => false;
@@ -39,19 +61,18 @@ namespace SapCrossfadeAudio.Runtime.Core.Generators.Crossfade
         {
             var realtime = new CrossfadeGeneratorRealtime();
 
-            float pos = Mathf.Clamp01(value: initialPosition01);
+            float pos = Mathf.Clamp01(value: _initialPosition01);
 
             var control = new CrossfadeGeneratorControl
             {
                 InitialPosition01 = pos,
                 InitialCurve = initialCurve,
-                DefaultFadeSeconds = defaultFadeSeconds
             };
 
             // Child format: prefer nested configuration, fallback to current AudioSettings
             var childNestedFormat = nestedConfiguration ?? new AudioFormat(config: AudioSettings.GetConfiguration());
 
-            if (sourceA is IAudioGenerator generatorA)
+            if (_sourceA is IAudioGenerator generatorA)
             {
                 realtime.ChildA = generatorA.CreateInstance(
                     context: context,
@@ -63,7 +84,7 @@ namespace SapCrossfadeAudio.Runtime.Core.Generators.Crossfade
                 realtime.ChildA = default;
             }
 
-            if (sourceB is IAudioGenerator generatorB)
+            if (_sourceB is IAudioGenerator generatorB)
             {
                 realtime.ChildB = generatorB.CreateInstance(
                     context: context,

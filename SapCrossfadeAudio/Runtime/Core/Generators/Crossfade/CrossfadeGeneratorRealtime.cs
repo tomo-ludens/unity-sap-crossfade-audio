@@ -13,27 +13,27 @@ namespace SapCrossfadeAudio.Runtime.Core.Generators.Crossfade
     /// Burst-compiled realtime processor for crossfade mixing. Runs on audio thread.
     /// </summary>
     [BurstCompile(CompileSynchronously = true, FloatMode = FloatMode.Fast, FloatPrecision = FloatPrecision.Medium)]
-    public struct CrossfadeGeneratorRealtime : GeneratorInstance.IRealtime
+    internal struct CrossfadeGeneratorRealtime : GeneratorInstance.IRealtime
     {
         private const float HalfPi = math.PI * 0.5f;
-        public GeneratorInstance ChildA;
-        public GeneratorInstance ChildB;
+        internal GeneratorInstance ChildA;
+        internal GeneratorInstance ChildB;
 
-        public NativeArray<float> BufferDataA;
-        public NativeArray<float> BufferDataB;
-        public int BufferChannelCount;
+        internal NativeArray<float> BufferDataA;
+        internal NativeArray<float> BufferDataB;
+        internal int BufferChannelCount;
 
-        public float FadePosition01;
-        public float TargetPosition01;
-        public float FadeIncrementPerFrame;
-        public CrossfadeCurve CurrentCurve;
-        public float SampleRate;
+        internal float FadePosition01;
+        internal float TargetPosition01;
+        internal float FadeIncrementPerFrame;
+        internal CrossfadeCurve CurrentCurve;
+        internal float SampleRate;
 
         private bool _childAFinished;
         private bool _childBFinished;
 
-        public bool ChildAFormatCompatible;
-        public bool ChildBFormatCompatible;
+        internal bool ChildAFormatCompatible;
+        internal bool ChildBFormatCompatible;
 
         public bool isFinite => false;
         public bool isRealtime => false;
@@ -141,7 +141,7 @@ namespace SapCrossfadeAudio.Runtime.Core.Generators.Crossfade
                 ChannelBufferCompat.ClearRange(buffer: buffer, startFrame: framesToProcess, frameCount: requestedFrames - framesToProcess);
             }
 
-            return framesToProcess;
+            return requestedFrames;
         }
 
         [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
@@ -179,11 +179,40 @@ namespace SapCrossfadeAudio.Runtime.Core.Generators.Crossfade
             float inc = FadeIncrementPerFrame;
             float target = TargetPosition01;
 
+            if (inc == 0.0f)
+            {
+                (float wA, float wB) = EvaluateWeights(position01: pos, curve: CurrentCurve);
+
+                for (int frame = 0; frame < frames; frame++)
+                {
+                    bool useA = canUseA && frame < writtenA;
+                    bool useB = canUseB && frame < writtenB;
+
+                    for (int ch = 0; ch < channels; ch++)
+                    {
+                        float a = useA ? childBufferA[channel: ch, frame: frame] : 0.0f;
+                        float b = useB ? childBufferB[channel: ch, frame: frame] : 0.0f;
+
+                        output[channel: ch, frame: frame] = a * wA + b * wB;
+                    }
+                }
+
+                FadePosition01 = math.clamp(valueToClamp: pos, lowerBound: 0.0f, upperBound: 1.0f);
+                FadeIncrementPerFrame = 0.0f;
+                return;
+            }
+
             for (int frame = 0; frame < frames; frame++)
             {
                 // Clamp to target to prevent overshoot
-                if (inc > 0.0f && pos >= target) { pos = target; inc = 0.0f; }
-                if (inc < 0.0f && pos <= target) { pos = target; inc = 0.0f; }
+                if (inc > 0.0f)
+                {
+                    if (pos >= target) { pos = target; inc = 0.0f; }
+                }
+                else
+                {
+                    if (pos <= target) { pos = target; inc = 0.0f; }
+                }
 
                 (float wA, float wB) = EvaluateWeights(position01: pos, curve: CurrentCurve);
 

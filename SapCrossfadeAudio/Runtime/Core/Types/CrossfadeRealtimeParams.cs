@@ -5,11 +5,11 @@ namespace SapCrossfadeAudio.Runtime.Core.Types
     /// </summary>
     internal readonly struct CrossfadeRealtimeParams
     {
-        public readonly float TargetPosition;
-        public readonly float DurationSamples;
-        public readonly CrossfadeCurve Curve;
+        internal readonly float TargetPosition;
+        internal readonly float DurationSamples;
+        internal readonly CrossfadeCurve Curve;
 
-        public CrossfadeRealtimeParams(float targetPosition, float durationSamples, CrossfadeCurve curve)
+        internal CrossfadeRealtimeParams(float targetPosition, float durationSamples, CrossfadeCurve curve)
         {
             TargetPosition = targetPosition;
             DurationSamples = durationSamples;
