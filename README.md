@@ -465,8 +465,6 @@ SapCrossfadeAudio/
 ├── Runtime/
 │   └── Core/
 │       ├── AssemblyInfo.cs                              # InternalsVisibleTo (for tests)
-│       ├── CrossfadeLogger.cs                           # Conditional logger
-│       ├── CrossfadeLoggerTypeTagCache.cs                # Logger type tag cache
 │       ├── SapCrossfadeAudio.Core.asmdef                # Core asmdef (Burst only)
 │       ├── Components/
 │       │   └── CrossfadePlayer.cs                       # MonoBehaviour wrapper
@@ -474,6 +472,9 @@ SapCrossfadeAudio/
 │       │   ├── ClipRequirements.cs                      # AudioClip validation
 │       │   ├── NativeBufferPool.cs                      # Memory pooling
 │       │   ├── SapCompat.cs                             # SAP boundary isolation
+│       │   ├── Logging/
+│       │   │   ├── CrossfadeLogger.cs                   # Conditional logger
+│       │   │   └── TypeTagCache.cs                      # Logger type tag cache
 │       │   └── Resampling/
 │       │       ├── ResampleMode.cs                      # Auto/Off/Force enum
 │       │       ├── ResampleQuality.cs                   # Nearest/Linear/Hermite4 enum

@@ -1,8 +1,6 @@
-using System;
-
-namespace SapCrossfadeAudio.Runtime.Core
+namespace SapCrossfadeAudio.Runtime.Core.Foundation.Logging
 {
-    internal static class CrossfadeLoggerTypeTagCache<T>
+    internal static class TypeTagCache<T>
     {
         // ReSharper disable StaticMemberInGenericType
         private static readonly string Tag = typeof(T).FullName ?? typeof(T).Name;

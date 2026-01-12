@@ -1,8 +1,8 @@
 using Unity.IntegerTime;
 using UnityEngine;
-using UnityEngine.Serialization;
 using UnityEngine.Audio;
 using SapCrossfadeAudio.Runtime.Core.Foundation;
+using SapCrossfadeAudio.Runtime.Core.Foundation.Logging;
 using SapCrossfadeAudio.Runtime.Core.Foundation.Resampling;
 using static UnityEngine.Audio.ProcessorInstance;
 
@@ -18,36 +18,33 @@ namespace SapCrossfadeAudio.Runtime.Core.Generators.Clip
         private float gain = 1.0f;
 
         [SerializeField]
-        [FormerlySerializedAs("resampleMode")]
-        private ResampleMode _resampleMode = ResampleMode.Auto;
+        private ResampleMode resampleMode = ResampleMode.Auto;
 
         [SerializeField]
-        [FormerlySerializedAs("resampleQuality")]
-        private ResampleQuality _resampleQuality = ResampleQuality.Linear;
+        private ResampleQuality resampleQuality = ResampleQuality.Linear;
 
         [SerializeField]
-        [FormerlySerializedAs("loop")]
-        private bool _loop;
+        private bool loop;
 
-        public ResampleMode resampleMode
+        public ResampleMode ResampleMode
         {
-            get => _resampleMode;
-            set => _resampleMode = value;
+            get => resampleMode;
+            set => resampleMode = value;
         }
 
-        public ResampleQuality resampleQuality
+        public ResampleQuality EesampleQuality
         {
-            get => _resampleQuality;
-            set => _resampleQuality = value;
+            get => resampleQuality;
+            set => resampleQuality = value;
         }
 
-        public bool loop
+        public bool Loop
         {
-            get => _loop;
-            set => _loop = value;
+            get => loop;
+            set => loop = value;
         }
 
-        public bool isFinite => !_loop;
+        public bool isFinite => !loop;
         public bool isRealtime => false;
         public DiscreteTime? length => null;
 
@@ -58,10 +55,10 @@ namespace SapCrossfadeAudio.Runtime.Core.Generators.Clip
         {
             var realtime = new ClipGeneratorRealtime
             {
-                Loop = _loop,
+                Loop = loop,
                 Gain = gain,
-                ResampleMode = _resampleMode,
-                ResampleQuality = _resampleQuality,
+                ResampleMode = resampleMode,
+                ResampleQuality = resampleQuality,
                 IsValid = false
             };
 
@@ -84,14 +81,47 @@ namespace SapCrossfadeAudio.Runtime.Core.Generators.Clip
                     realtime.ClipTotalFrames = clipFrames;
                     realtime.SourceFramePosition = 0.0f;
                     realtime.IsValid = ok;
+
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+                    if (!ok)
+                    {
+                        CrossfadeLogger.LogWarning<ClipGeneratorAsset>(
+                            message: $"AudioClip.GetData failed: {clip.name}",
+                            context: this
+                        );
+                    }
+#endif
                 }
             }
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            else
+            {
+                if (clip == null)
+                {
+                    CrossfadeLogger.LogWarning<ClipGeneratorAsset>(message: "AudioClip is not set.", context: this);
+                }
+                else if (!ClipRequirements.CanUseGetData(clip: clip))
+                {
+                    CrossfadeLogger.LogWarning<ClipGeneratorAsset>(
+                        message: $"AudioClip is not compatible with GetData (name={clip.name}, loadType={clip.loadType}).",
+                        context: this
+                    );
+                }
+                else if (!ClipRequirements.EnsureLoaded(clip: clip))
+                {
+                    CrossfadeLogger.LogWarning<ClipGeneratorAsset>(
+                        message: $"AudioClip failed to load audio data (name={clip.name}, loadState={clip.loadState}).",
+                        context: this
+                    );
+                }
+            }
+#endif
 
             var control = new ClipGeneratorControl(
-                loop: _loop,
+                loop: loop,
                 gain: gain,
-                resampleMode: _resampleMode,
-                resampleQuality: _resampleQuality);
+                resampleMode: resampleMode,
+                resampleQuality: resampleQuality);
 
             return context.AllocateGenerator(realtimeState: realtime, controlState: control, nestedFormat: nestedConfiguration, creationParameters: creationParameters);
         }

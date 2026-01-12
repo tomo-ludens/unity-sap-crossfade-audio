@@ -2,7 +2,7 @@ using System;
 using System.Diagnostics;
 using Debug = UnityEngine.Debug;
 
-namespace SapCrossfadeAudio.Runtime.Core
+namespace SapCrossfadeAudio.Runtime.Core.Foundation.Logging
 {
     /// <summary>
     /// SapCrossfadeAudio infrastructure logger (dev-only).
@@ -26,7 +26,7 @@ namespace SapCrossfadeAudio.Runtime.Core
 
         [Conditional(conditionString: EditorSymbol), Conditional(conditionString: DevBuildSymbol), Conditional(conditionString: AssertionsSymbol)]
         internal static void Log<T>(string message, UnityEngine.Object context = null)
-            => Debug.Log(message: CrossfadeLoggerTypeTagCache<T>.Prefix + message, context: context);
+            => Debug.Log(message: TypeTagCache<T>.Prefix + message, context: context);
 
         [Conditional(conditionString: EditorSymbol), Conditional(conditionString: DevBuildSymbol), Conditional(conditionString: AssertionsSymbol)]
         internal static void LogWarning(string message, UnityEngine.Object context = null)
@@ -34,7 +34,7 @@ namespace SapCrossfadeAudio.Runtime.Core
 
         [Conditional(conditionString: EditorSymbol), Conditional(conditionString: DevBuildSymbol), Conditional(conditionString: AssertionsSymbol)]
         internal static void LogWarning<T>(string message, UnityEngine.Object context = null)
-            => Debug.LogWarning(message: CrossfadeLoggerTypeTagCache<T>.Prefix + message, context: context);
+            => Debug.LogWarning(message: TypeTagCache<T>.Prefix + message, context: context);
 
         [Conditional(conditionString: EditorSymbol), Conditional(conditionString: DevBuildSymbol), Conditional(conditionString: AssertionsSymbol)]
         internal static void LogError(string message, UnityEngine.Object context = null)
@@ -42,7 +42,7 @@ namespace SapCrossfadeAudio.Runtime.Core
 
         [Conditional(conditionString: EditorSymbol), Conditional(conditionString: DevBuildSymbol), Conditional(conditionString: AssertionsSymbol)]
         internal static void LogError<T>(string message, UnityEngine.Object context = null)
-            => Debug.LogError(message: CrossfadeLoggerTypeTagCache<T>.Prefix + message, context: context);
+            => Debug.LogError(message: TypeTagCache<T>.Prefix + message, context: context);
 
         [Conditional(conditionString: EditorSymbol), Conditional(conditionString: DevBuildSymbol), Conditional(conditionString: AssertionsSymbol)]
         internal static void LogException(Exception exception, UnityEngine.Object context = null)

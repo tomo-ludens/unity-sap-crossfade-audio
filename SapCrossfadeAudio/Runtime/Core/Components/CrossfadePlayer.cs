@@ -1,3 +1,4 @@
+using SapCrossfadeAudio.Runtime.Core.Foundation.Logging;
 using UnityEngine;
 using SapCrossfadeAudio.Runtime.Core.Generators.Crossfade;
 using SapCrossfadeAudio.Runtime.Core.Integration;

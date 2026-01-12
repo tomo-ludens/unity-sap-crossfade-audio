@@ -1,8 +1,8 @@
 using Unity.IntegerTime;
 using UnityEngine;
-using UnityEngine.Serialization;
 using UnityEngine.Audio;
 using SapCrossfadeAudio.Runtime.Core.Foundation;
+using SapCrossfadeAudio.Runtime.Core.Foundation.Logging;
 using SapCrossfadeAudio.Runtime.Core.Types;
 using static UnityEngine.Audio.ProcessorInstance;
 
@@ -17,37 +17,34 @@ namespace SapCrossfadeAudio.Runtime.Core.Generators.Crossfade
         private const int DefaultChannelCount = 2;
         [Header(header: "Sources (must implement IAudioGenerator)")]
         [SerializeField]
-        [FormerlySerializedAs("sourceA")]
-        private ScriptableObject _sourceA;
+        private ScriptableObject sourceA;
 
         [SerializeField]
-        [FormerlySerializedAs("sourceB")]
-        private ScriptableObject _sourceB;
+        private ScriptableObject sourceB;
 
         [Header(header: "Initial State")]
         [SerializeField]
         private CrossfadeCurve initialCurve = CrossfadeCurve.EqualPower;
 
         [SerializeField] [Range(min: 0.0f, max: 1.0f)]
-        [FormerlySerializedAs("initialPosition01")]
-        private float _initialPosition01;
+        private float initialPosition01;
 
-        public ScriptableObject sourceA
+        public ScriptableObject SourceA
         {
-            get => _sourceA;
-            set => _sourceA = value;
+            get => sourceA;
+            set => sourceA = value;
         }
 
-        public ScriptableObject sourceB
+        public ScriptableObject SourceB
         {
-            get => _sourceB;
-            set => _sourceB = value;
+            get => sourceB;
+            set => sourceB = value;
         }
 
-        public float initialPosition01
+        public float InitialPosition01
         {
-            get => _initialPosition01;
-            set => _initialPosition01 = value;
+            get => initialPosition01;
+            set => initialPosition01 = value;
         }
 
         public bool isFinite => false;
@@ -61,7 +58,7 @@ namespace SapCrossfadeAudio.Runtime.Core.Generators.Crossfade
         {
             var realtime = new CrossfadeGeneratorRealtime();
 
-            float pos = Mathf.Clamp01(value: _initialPosition01);
+            float pos = Mathf.Clamp01(value: initialPosition01);
 
             var control = new CrossfadeGeneratorControl
             {
@@ -72,7 +69,7 @@ namespace SapCrossfadeAudio.Runtime.Core.Generators.Crossfade
             // Child format: prefer nested configuration, fallback to current AudioSettings
             var childNestedFormat = nestedConfiguration ?? new AudioFormat(config: AudioSettings.GetConfiguration());
 
-            if (_sourceA is IAudioGenerator generatorA)
+            if (sourceA is IAudioGenerator generatorA)
             {
                 realtime.ChildA = generatorA.CreateInstance(
                     context: context,
@@ -81,10 +78,18 @@ namespace SapCrossfadeAudio.Runtime.Core.Generators.Crossfade
             }
             else
             {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+                CrossfadeLogger.LogWarning<CrossfadeGeneratorAsset>(
+                    message: sourceA == null
+                        ? "SourceA is not set."
+                        : $"SourceA does not implement IAudioGenerator: {sourceA.GetType().FullName}",
+                    context: this
+                );
+#endif
                 realtime.ChildA = default;
             }
 
-            if (_sourceB is IAudioGenerator generatorB)
+            if (sourceB is IAudioGenerator generatorB)
             {
                 realtime.ChildB = generatorB.CreateInstance(
                     context: context,
@@ -93,6 +98,14 @@ namespace SapCrossfadeAudio.Runtime.Core.Generators.Crossfade
             }
             else
             {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+                CrossfadeLogger.LogWarning<CrossfadeGeneratorAsset>(
+                    message: sourceB == null
+                        ? "SourceB is not set."
+                        : $"SourceB does not implement IAudioGenerator: {sourceB.GetType().FullName}",
+                    context: this
+                );
+#endif
                 realtime.ChildB = default;
             }
 

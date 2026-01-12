@@ -7,6 +7,7 @@ using UnityEngine.AddressableAssets;
 using UnityEngine.Audio;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using SapCrossfadeAudio.Runtime.Core.Foundation;
+using SapCrossfadeAudio.Runtime.Core.Foundation.Logging;
 using SapCrossfadeAudio.Runtime.Core.Foundation.Resampling;
 using SapCrossfadeAudio.Runtime.Core.Generators.Clip;
 using static UnityEngine.Audio.ProcessorInstance;
@@ -134,7 +135,7 @@ namespace SapCrossfadeAudio.Addressables
             if (_clipReference == null || !_clipReference.RuntimeKeyIsValid())
             {
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
-                Debug.LogWarning($"[AddressableClipGenerator] Invalid AssetReference: {name}", this);
+                CrossfadeLogger.LogWarning<AddressableClipGeneratorAsset>(message: $"Invalid AssetReference: {name}", context: this);
 #endif
                 return;
             }
@@ -175,7 +176,7 @@ namespace SapCrossfadeAudio.Addressables
                 else
                 {
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
-                    Debug.LogError($"[AddressableClipGenerator] Load failed: {name}", this);
+                    CrossfadeLogger.LogError<AddressableClipGeneratorAsset>(message: $"Load failed: {name}", context: this);
 #endif
                     if (_handle.IsValid())
                     {
@@ -187,7 +188,7 @@ namespace SapCrossfadeAudio.Addressables
             catch (System.Exception ex)
             {
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
-                Debug.LogException(ex, this);
+                CrossfadeLogger.LogException<AddressableClipGeneratorAsset>(exception: ex, context: this);
 #endif
 
                 if (_handle.IsValid())
@@ -312,7 +313,7 @@ namespace SapCrossfadeAudio.Addressables
             catch (System.Exception ex)
             {
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
-                Debug.LogException(ex, this);
+                CrossfadeLogger.LogException<AddressableClipGeneratorAsset>(exception: ex, context: this);
 #endif
             }
         }
