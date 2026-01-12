@@ -9,7 +9,7 @@ using static UnityEngine.Audio.ProcessorInstance;
 
 namespace SapCrossfadeAudio.Runtime.Core.Generators.Crossfade
 {
-    [CreateAssetMenu(fileName = "CrossfadeGenerator", menuName = "TomoLudens/SapCrossfadeAudio/Generators/CrossfadeGenerator", order = 20)]
+    [CreateAssetMenu(fileName = "CrossfadeGenerator", menuName = "SapCrossfadeAudio/Generators/CrossfadeGenerator", order = 20)]
     public sealed class CrossfadeGeneratorAsset : ScriptableObject, IAudioGenerator
     {
         [Header(header: "Sources (must implement IAudioGenerator)")]

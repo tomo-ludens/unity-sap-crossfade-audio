@@ -1,5 +1,5 @@
 {
-  "name": "CrossfadeAudio.Core",
+  "name": "SapCrossfadeAudio.Core",
   "references": [
     "Unity.Burst",
     "Unity.Collections",

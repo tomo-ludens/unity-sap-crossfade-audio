@@ -1,7 +1,7 @@
 {
-    "name": "CrossfadeAudio.Tests.Runtime",
+    "name": "SapCrossfadeAudio.Tests.Runtime",
     "references": [
-        "CrossfadeAudio.Core",
+        "SapCrossfadeAudio.Core",
         "Unity.Burst",
         "Unity.Collections",
         "Unity.Mathematics"

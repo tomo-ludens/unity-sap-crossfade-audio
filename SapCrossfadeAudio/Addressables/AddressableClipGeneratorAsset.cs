@@ -25,7 +25,7 @@ namespace SapCrossfadeAudio.Addressables
     /// - Release() は冪等（何度呼んでも安全）
     /// - 外部ローダーと併用する場合は、責務の明確化が必要
     /// </remarks>
-    [CreateAssetMenu(fileName = "AddressableClipGenerator", menuName = "TomoLudens/SapCrossfadeAudio/Generators/AddressableClipGenerator", order = 15)]
+    [CreateAssetMenu(fileName = "AddressableClipGenerator", menuName = "SapCrossfadeAudio/Generators/AddressableClipGenerator", order = 15)]
     public sealed class AddressableClipGeneratorAsset : ScriptableObject, IAudioGenerator, IPreloadableAudioGenerator
     {
         [Header("Addressable Reference")]

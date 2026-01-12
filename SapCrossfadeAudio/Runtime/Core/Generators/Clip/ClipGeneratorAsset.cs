@@ -9,7 +9,7 @@ using static UnityEngine.Audio.ProcessorInstance;
 
 namespace SapCrossfadeAudio.Runtime.Core.Generators.Clip
 {
-    [CreateAssetMenu(fileName = "ClipGenerator", menuName = "TomoLudens/SapCrossfadeAudio/Generators/ClipGenerator", order = 10)]
+    [CreateAssetMenu(fileName = "ClipGenerator", menuName = "SapCrossfadeAudio/Generators/ClipGenerator", order = 10)]
     public sealed class ClipGeneratorAsset : ScriptableObject, IAudioGenerator
     {
         [SerializeField]

@@ -118,7 +118,7 @@ https://github.com/tomoludens/unity-sap-crossfade-audio.git?path=Assets/Plugins/
 ### Step 1: Generator Assets の作成
 
 1. **Project ウィンドウで右クリック**
-2. **Create > TomoLudens > SapCrossfadeAudio > Generators** から作成
+2. **Create > SapCrossfadeAudio > Generators** から作成
 
 ```
 ClipGenerator (Source A) ─┐

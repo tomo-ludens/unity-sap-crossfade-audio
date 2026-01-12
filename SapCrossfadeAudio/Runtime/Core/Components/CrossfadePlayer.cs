@@ -72,7 +72,7 @@ namespace SapCrossfadeAudio.Runtime.Core.Components
         {
             if (_audioSource == null || generator == null)
             {
-                CrossfadeLogger.LogWarning<CrossfadePlayer>(message: "AudioSource または Generator が設定されていません。", context: this);
+                CrossfadeLogger.LogWarning<CrossfadePlayer>(message: "AudioSource or Generator is not set.", context: this);
                 return;
             }
 
@@ -101,7 +101,7 @@ namespace SapCrossfadeAudio.Runtime.Core.Components
             var handle = Handle;
             if (!handle.IsValid)
             {
-                CrossfadeLogger.LogWarning<CrossfadePlayer>(message: "generatorInstance が利用できません。AudioSource は再生中ですか？", context: this);
+                CrossfadeLogger.LogWarning<CrossfadePlayer>(message: "generatorInstance is not available. Is the AudioSource playing?", context: this);
                 return;
             }
 
@@ -118,7 +118,7 @@ namespace SapCrossfadeAudio.Runtime.Core.Components
             var handle = Handle;
             if (!handle.IsValid)
             {
-                CrossfadeLogger.LogWarning<CrossfadePlayer>(message: "generatorInstance が利用できません。AudioSource は再生中ですか？", context: this);
+                CrossfadeLogger.LogWarning<CrossfadePlayer>(message: "generatorInstance is not available. Is the AudioSource playing?", context: this);
                 return;
             }
 
@@ -136,7 +136,7 @@ namespace SapCrossfadeAudio.Runtime.Core.Components
             var handle = Handle;
             if (!handle.IsValid)
             {
-                CrossfadeLogger.LogWarning<CrossfadePlayer>(message: "generatorInstance が利用できません。AudioSource は再生中ですか？", context: this);
+                CrossfadeLogger.LogWarning<CrossfadePlayer>(message: "generatorInstance is not available. Is the AudioSource playing?", context: this);
                 return;
             }
 
@@ -152,7 +152,7 @@ namespace SapCrossfadeAudio.Runtime.Core.Components
             var handle = Handle;
             if (!handle.IsValid)
             {
-                CrossfadeLogger.LogWarning<CrossfadePlayer>(message: "generatorInstance が利用できません。AudioSource は再生中ですか？", context: this);
+                CrossfadeLogger.LogWarning<CrossfadePlayer>(message: "generatorInstance is not available. Is the AudioSource playing?", context: this);
                 return;
             }
 
