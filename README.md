@@ -14,7 +14,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Unity-6.3.4f1+-black?logo=unity" alt="Unity 6.3.4f1+">
+  <img src="https://img.shields.io/badge/Unity-6.3+-black?logo=unity" alt="Unity 6.3+">
   <img src="https://img.shields.io/badge/Burst-Required-orange" alt="Burst Required">
   <img src="https://img.shields.io/badge/License-MIT-blue" alt="MIT License">
   <img src="https://img.shields.io/badge/Platform-Any-green" alt="Any Platform">
@@ -90,7 +90,7 @@ player.CrossfadeToB(duration: 2f, CrossfadeCurve.EqualPower);
 
 | 項目 | 要件 |
 |------|------|
-| **Unity** | 6.3.4f1 以降（SAP 対応） |
+| **Unity** | 6.3 以降（SAP 対応） |
 | **必須パッケージ** | `com.unity.burst` |
 | **任意パッケージ** | `com.unity.addressables`（別 asmdef） |
 
@@ -476,33 +476,57 @@ Asset (SO)  ──CreateInstance()──►  GeneratorInstance
 
 ---
 
-## Project Structure
+## Directory Structure
 
-```
+```text
 SapCrossfadeAudio/
+├── Addressables/                                        # Optional (separate asmdef)
+│   ├── AddressableClipGeneratorAsset.cs                 # Addressables AudioClip generator
+│   ├── IPreloadableAudioGenerator.cs                    # Preload interface
+│   └── SapCrossfadeAudio.Addressables.asmdef
 ├── Runtime/
 │   └── Core/
-│       ├── SapCrossfadeAudio.Core.asmdef  # 外部依存なし
+│       ├── AssemblyInfo.cs                              # InternalsVisibleTo (for tests)
+│       ├── CrossfadeLogger.cs                           # Conditional logger
+│       ├── SapCrossfadeAudio.Core.asmdef                # Core asmdef (Burst only)
+│       ├── Components/
+│       │   └── CrossfadePlayer.cs                       # MonoBehaviour wrapper
 │       ├── Foundation/
-│       │   ├── SapCompat.cs              # SAP 境界隔離
-│       │   ├── NativeBufferPool.cs       # メモリプーリング
-│       │   └── Resampling/               # リサンプリング
-│       ├── Types/
-│       │   ├── CrossfadeCommand.cs
-│       │   └── CrossfadeCurve.cs
+│       │   ├── ClipRequirements.cs                      # AudioClip validation
+│       │   ├── NativeBufferPool.cs                      # Memory pooling
+│       │   ├── SapCompat.cs                             # SAP boundary isolation
+│       │   └── Resampling/
+│       │       ├── ResampleMode.cs                      # Auto/Off/Force enum
+│       │       ├── ResampleQuality.cs                   # Nearest/Linear/Hermite4 enum
+│       │       └── Resampler.cs                         # Interpolation methods
 │       ├── Generators/
-│       │   ├── Clip/                     # AudioClip 再生
-│       │   └── Crossfade/                # クロスフェード
+│       │   ├── Clip/
+│       │   │   ├── ClipGeneratorAsset.cs                # AudioClip generator asset
+│       │   │   ├── ClipGeneratorControl.cs              # Control-side state
+│       │   │   └── ClipGeneratorRealtime.cs             # Burst-compiled realtime
+│       │   └── Crossfade/
+│       │       ├── ChannelBufferCompat.cs               # Buffer compatibility
+│       │       ├── CrossfadeGeneratorAsset.cs           # Crossfade generator asset
+│       │       ├── CrossfadeGeneratorControl.cs         # Control-side state
+│       │       └── CrossfadeGeneratorRealtime.cs        # Burst-compiled realtime
 │       ├── Integration/
-│       │   └── CrossfadeHandle.cs        # 非MonoBehaviour制御
-│       └── Components/
-│           └── CrossfadePlayer.cs        # MonoBehaviourラッパー
-├── Addressables/                         # 任意（別 asmdef）
-│   ├── IPreloadableAudioGenerator.cs
-│   └── AddressableClipGeneratorAsset.cs
+│       │   └── CrossfadeHandle.cs                       # Non-MonoBehaviour control
+│       └── Types/
+│           ├── CrossfadeCommand.cs                      # Crossfade command struct
+│           ├── CrossfadeCurve.cs                        # EqualPower/Linear/SCurve enum
+│           ├── CrossfadeRealtimeParams.cs               # Realtime parameters
+│           ├── IPcmPageProvider.cs                      # PCM streaming interface
+│           └── PageReady.cs                             # Page ready state
 └── Tests/
-    ├── Editor/                           # EditModeテスト
-    └── Runtime/                          # PlayModeテスト
+    ├── Editor/                                          # EditMode tests
+    │   ├── CrossfadeCommandTests.cs
+    │   ├── NativeBufferPoolTests.cs
+    │   ├── ResamplerTests.cs
+    │   └── SapCrossfadeAudio.Tests.Editor.asmdef
+    └── Runtime/                                         # PlayMode tests
+        ├── CrossfadeHandleTests.cs
+        ├── CrossfadePlayerTests.cs
+        └── SapCrossfadeAudio.Tests.Runtime.asmdef
 ```
 
 ---
@@ -586,7 +610,7 @@ Unity.exe -runTests -batchmode -projectPath . -testPlatform PlayMode -testResult
 <summary><strong>Burst コンパイルエラー</strong></summary>
 
 1. `com.unity.burst` パッケージがインストールされているか確認
-2. Unity 6.3.4f1 以降を使用しているか確認
+2. Unity 6.3 以降を使用しているか確認
 
 </details>
 
