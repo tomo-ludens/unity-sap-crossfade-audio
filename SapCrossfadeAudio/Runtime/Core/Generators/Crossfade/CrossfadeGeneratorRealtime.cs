@@ -11,9 +11,13 @@ using SapCrossfadeAudio.Runtime.Core.Types;
 
 namespace SapCrossfadeAudio.Runtime.Core.Generators.Crossfade
 {
+    /// <summary>
+    /// Burst-compiled realtime processor for crossfade mixing. Runs on audio thread.
+    /// </summary>
     [BurstCompile(CompileSynchronously = true, FloatMode = FloatMode.Fast, FloatPrecision = FloatPrecision.Medium)]
     public struct CrossfadeGeneratorRealtime : GeneratorInstance.IRealtime
     {
+        private const float HalfPi = math.PI * 0.5f;
         public GeneratorInstance ChildA;
         public GeneratorInstance ChildB;
 
@@ -59,7 +63,7 @@ namespace SapCrossfadeAudio.Runtime.Core.Generators.Crossfade
 
             if (requestedFrames <= 0 || channels <= 0)
             {
-                return 0; // Result は int 返しで OK
+                return 0;
             }
 
             buffer.Clear();
@@ -171,7 +175,7 @@ namespace SapCrossfadeAudio.Runtime.Core.Generators.Crossfade
 
             for (int frame = 0; frame < frames; frame++)
             {
-                // 到達判定（オーバーシュート抑止）
+                // Clamp to target to prevent overshoot
                 if (inc > 0.0f && pos >= target) { pos = target; inc = 0.0f; }
                 if (inc < 0.0f && pos <= target) { pos = target; inc = 0.0f; }
 
@@ -215,7 +219,7 @@ namespace SapCrossfadeAudio.Runtime.Core.Generators.Crossfade
                 case CrossfadeCurve.EqualPower:
                 default:
                 {
-                    float t = p * (math.PI * 0.5f);
+                    float t = p * HalfPi;
                     float wA = math.cos(x: t);
                     float wB = math.sin(x: t);
                     return (wA, wB);

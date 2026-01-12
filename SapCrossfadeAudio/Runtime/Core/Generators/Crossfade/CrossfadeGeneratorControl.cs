@@ -11,8 +11,12 @@ using static UnityEngine.Audio.ProcessorInstance;
 
 namespace SapCrossfadeAudio.Runtime.Core.Generators.Crossfade
 {
+    /// <summary>
+    /// Control-side state for CrossfadeGenerator. Handles configuration, message routing, and resource cleanup.
+    /// </summary>
     public struct CrossfadeGeneratorControl : GeneratorInstance.IControl<CrossfadeGeneratorRealtime>
     {
+        private const int DefaultChannelCount = 2;
         public float InitialPosition01;
         public CrossfadeCurve InitialCurve;
         public float DefaultFadeSeconds;
@@ -31,13 +35,13 @@ namespace SapCrossfadeAudio.Runtime.Core.Generators.Crossfade
             int outputChannels = format.channelCount;
             if (outputChannels <= 0)
             {
-                outputChannels = 2;
+                outputChannels = DefaultChannelCount;
             }
 
             realtime.BufferChannelCount = outputChannels;
             realtime.SampleRate = format.sampleRate;
 
-            // 重要：ここで context.Configure(child, ...) を呼ばない（ADTM例外の原因）
+            // IMPORTANT: Do not call context.Configure(child, ...) here - causes ADTM exception
             realtime.ChildAFormatCompatible = IsChildFormatCompatible(
                 context: context,
                 child: realtime.ChildA,
@@ -50,7 +54,7 @@ namespace SapCrossfadeAudio.Runtime.Core.Generators.Crossfade
                 expectedSpeakerMode: format.speakerMode,
                 expectedSampleRate: format.sampleRate);
 
-            // バッファは CreateInstance で事前割り当て済み（Job コンテキストでは Persistent 割り当て不可のため）
+            // Buffers pre-allocated in CreateInstance (Persistent unavailable in Job context)
 
             float initialPos = math.clamp(valueToClamp: InitialPosition01, lowerBound: 0.0f, upperBound: 1.0f);
             realtime.CurrentCurve = InitialCurve;
@@ -61,21 +65,15 @@ namespace SapCrossfadeAudio.Runtime.Core.Generators.Crossfade
 
         public Response OnMessage(ControlContext context, Pipe pipe, Message message)
         {
-            if (message.Is<CrossfadeCommand>())
-            {
-                pipe.SendData(
-                    context: context,
-                    data: message.Get<CrossfadeCommand>());
+            if (!message.Is<CrossfadeCommand>()) return Response.Unhandled;
 
-                return Response.Handled;
-            }
-
-            return Response.Unhandled;
+            pipe.SendData(context: context, data: message.Get<CrossfadeCommand>());
+            return Response.Handled;
         }
 
         public void Update(ControlContext context, Pipe pipe)
         {
-            // Crossfade は Control 側 tick で特に何もしない
+            // No per-frame updates needed on Control side
         }
 
         public void Dispose(ControlContext context, ref CrossfadeGeneratorRealtime realtime)
@@ -118,8 +116,7 @@ namespace SapCrossfadeAudio.Runtime.Core.Generators.Crossfade
 
             var cfg = context.GetConfiguration(generatorInstance: child);
 
-            return cfg.setup.speakerMode == expectedSpeakerMode &&
-                   Mathf.Approximately(a: cfg.setup.sampleRate, b: expectedSampleRate);
+            return cfg.setup.speakerMode == expectedSpeakerMode && Mathf.Approximately(a: cfg.setup.sampleRate, b: expectedSampleRate);
         }
 
     }

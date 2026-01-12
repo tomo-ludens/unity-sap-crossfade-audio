@@ -9,9 +9,13 @@ using static UnityEngine.Audio.ProcessorInstance;
 
 namespace SapCrossfadeAudio.Runtime.Core.Generators.Crossfade
 {
+    /// <summary>
+    /// ScriptableObject that creates CrossfadeGenerator instances for 2-source audio mixing.
+    /// </summary>
     [CreateAssetMenu(fileName = "CrossfadeGenerator", menuName = "SapCrossfadeAudio/Generators/CrossfadeGenerator", order = 20)]
     public sealed class CrossfadeGeneratorAsset : ScriptableObject, IAudioGenerator
     {
+        private const int DefaultChannelCount = 2;
         [Header(header: "Sources (must implement IAudioGenerator)")]
         public ScriptableObject sourceA;
         public ScriptableObject sourceB;
@@ -46,8 +50,8 @@ namespace SapCrossfadeAudio.Runtime.Core.Generators.Crossfade
                 DefaultFadeSeconds = defaultFadeSeconds
             };
 
-            // 子へ渡すフォーマット（親がネストされているならそれを優先、そうでなければ現行 AudioSettings）
-            AudioFormat childNestedFormat = nestedConfiguration ?? new AudioFormat(config: AudioSettings.GetConfiguration());
+            // Child format: prefer nested configuration, fallback to current AudioSettings
+            var childNestedFormat = nestedConfiguration ?? new AudioFormat(config: AudioSettings.GetConfiguration());
 
             if (sourceA is IAudioGenerator generatorA)
             {
@@ -73,14 +77,14 @@ namespace SapCrossfadeAudio.Runtime.Core.Generators.Crossfade
                 realtime.ChildB = default;
             }
 
-            // バッファを事前割り当て（CreateInstance はメインスレッドで実行されるため Persistent が使用可能）
-            // Configure は Job コンテキストで実行されるため、そこでは Temp しか使用できない
+            // Pre-allocate buffers here (main thread allows Persistent allocator).
+            // Configure runs in Job context where only Temp allocator is available.
             int bufferFrameCount = childNestedFormat.bufferFrameCount > 0
                 ? childNestedFormat.bufferFrameCount
                 : AudioSettings.GetConfiguration().dspBufferSize;
             int channels = childNestedFormat.channelCount > 0
                 ? childNestedFormat.channelCount
-                : 2;
+                : DefaultChannelCount;
             int requiredFloats = bufferFrameCount * channels;
 
             if (requiredFloats <= 0)

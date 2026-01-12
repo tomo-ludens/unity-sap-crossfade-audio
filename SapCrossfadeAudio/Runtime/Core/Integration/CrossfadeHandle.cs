@@ -8,15 +8,15 @@ using SapCrossfadeAudio.Runtime.Core.Types;
 namespace SapCrossfadeAudio.Runtime.Core.Integration
 {
     /// <summary>
-    /// CrossfadeGenerator を非 MonoBehaviour から操作するための軽量ハンドル。
-    /// AudioSource.generatorInstance を安全にラップし、存在チェックとコマンド送信を提供する。
+    /// Lightweight handle for controlling CrossfadeGenerator from non-MonoBehaviour code.
+    /// Safely wraps AudioSource.generatorInstance with existence checks and command dispatch.
     /// </summary>
     public readonly struct CrossfadeHandle
     {
         private readonly ProcessorInstance _instance;
 
         /// <summary>
-        /// 指定された ProcessorInstance からハンドルを生成する。
+        /// Creates a handle from the specified ProcessorInstance.
         /// </summary>
         public CrossfadeHandle(ProcessorInstance instance)
         {
@@ -24,7 +24,7 @@ namespace SapCrossfadeAudio.Runtime.Core.Integration
         }
 
         /// <summary>
-        /// ハンドルが有効かどうか。generatorInstance が存在し、操作可能な場合に true。
+        /// Whether this handle is valid and operable.
         /// </summary>
         public bool IsValid
         {
@@ -33,12 +33,12 @@ namespace SapCrossfadeAudio.Runtime.Core.Integration
         }
 
         /// <summary>
-        /// 指定したターゲット位置へクロスフェードを開始する。
+        /// Starts crossfade to the specified target position.
         /// </summary>
-        /// <param name="targetPosition01">ターゲット位置 (0.0 = SourceA, 1.0 = SourceB)</param>
-        /// <param name="durationSeconds">フェード時間（秒）</param>
-        /// <param name="curve">フェードカーブ</param>
-        /// <returns>コマンド送信に成功した場合 true</returns>
+        /// <param name="targetPosition01">Target position (0.0 = SourceA, 1.0 = SourceB)</param>
+        /// <param name="durationSeconds">Fade duration in seconds</param>
+        /// <param name="curve">Fade curve</param>
+        /// <returns>True if command was sent successfully</returns>
         [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
         public bool TryCrossfade(float targetPosition01, float durationSeconds, CrossfadeCurve curve)
         {
@@ -56,7 +56,7 @@ namespace SapCrossfadeAudio.Runtime.Core.Integration
         }
 
         /// <summary>
-        /// Source A へクロスフェードする (position = 0.0)。
+        /// Crossfades to Source A (position = 0.0).
         /// </summary>
         [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
         public bool TryCrossfadeToA(float durationSeconds, CrossfadeCurve curve)
@@ -65,7 +65,7 @@ namespace SapCrossfadeAudio.Runtime.Core.Integration
         }
 
         /// <summary>
-        /// Source B へクロスフェードする (position = 1.0)。
+        /// Crossfades to Source B (position = 1.0).
         /// </summary>
         [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
         public bool TryCrossfadeToB(float durationSeconds, CrossfadeCurve curve)
@@ -74,7 +74,7 @@ namespace SapCrossfadeAudio.Runtime.Core.Integration
         }
 
         /// <summary>
-        /// 指定位置へ即座に切り替える（フェードなし）。
+        /// Instantly sets position without fading.
         /// </summary>
         [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
         public bool TrySetImmediate(float position01)
@@ -83,16 +83,12 @@ namespace SapCrossfadeAudio.Runtime.Core.Integration
         }
 
         /// <summary>
-        /// AudioSource から CrossfadeHandle を生成する。
-        /// AudioSource が再生中で generatorInstance が有効な場合のみ操作可能。
+        /// Creates a CrossfadeHandle from an AudioSource. Only operable when playing with valid generatorInstance.
         /// </summary>
         [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
         public static CrossfadeHandle FromAudioSource(AudioSource source)
         {
-            if (source == null)
-                return default;
-
-            return new CrossfadeHandle(instance: source.generatorInstance);
+            return source == null ? default : new CrossfadeHandle(instance: source.generatorInstance);
         }
     }
 }

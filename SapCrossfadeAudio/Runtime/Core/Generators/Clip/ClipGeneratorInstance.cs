@@ -13,10 +13,15 @@ using static UnityEngine.Audio.ProcessorInstance;
 
 namespace SapCrossfadeAudio.Runtime.Core.Generators.Clip
 {
+    /// <summary>
+    /// Burst-compiled realtime processor for AudioClip playback with optional resampling.
+    /// </summary>
     [BurstCompile(CompileSynchronously = true)]
     internal struct ClipGeneratorRealtime : GeneratorInstance.IRealtime
     {
-        // PCM: interleaved (frames * channels)
+        private const int DefaultChannelCount = 2;
+
+        // PCM data in interleaved format (frames * channels)
         internal NativeArray<float> ClipDataInterleaved;
         internal int ClipChannels;
         internal int ClipSampleRate;
@@ -41,7 +46,7 @@ namespace SapCrossfadeAudio.Runtime.Core.Generators.Clip
 
         public void Update(UpdatedDataContext context, Pipe pipe)
         {
-            // v1.1.0: この段階ではイベントなし
+            // No events at this stage
         }
 
         public GeneratorInstance.Result Process(
@@ -57,7 +62,7 @@ namespace SapCrossfadeAudio.Runtime.Core.Generators.Clip
 
             int requestedFrames = buffer.frameCount;
 
-            // 現段階では ch 不一致は無音（将来 up/down-mix を入れるならここを拡張）
+            // Channel mismatch: output silence (future: add up/down-mix support here)
             if (buffer.channelCount != OutputChannels || OutputChannels != ClipChannels)
             {
                 ZeroFill(buffer: buffer, startFrame: 0, frameCount: requestedFrames);
@@ -68,7 +73,7 @@ namespace SapCrossfadeAudio.Runtime.Core.Generators.Clip
 
             if (ResampleMode == ResampleMode.Off && sampleRateMismatch)
             {
-                // 旧互換: 不一致は枯渇扱い（親がいる場合は不足分 0 埋めへ）
+                // Legacy compat: mismatch treated as exhausted (parent handles zero-fill)
                 return 0;
             }
 
@@ -78,7 +83,7 @@ namespace SapCrossfadeAudio.Runtime.Core.Generators.Clip
 
             if (!doResample)
             {
-                // 1:1 copy
+                // Direct copy (no resampling needed)
                 for (int frame = 0; frame < requestedFrames; frame++)
                 {
                     int srcFrame = (int)SourceFramePosition;
@@ -103,7 +108,8 @@ namespace SapCrossfadeAudio.Runtime.Core.Generators.Clip
             }
             else
             {
-                float step = 1f * ClipSampleRate / OutputSampleRate;
+                // Resampling ratio: how many source frames per output frame
+                float step = (float)ClipSampleRate / OutputSampleRate;
                 for (int frame = 0; frame < requestedFrames; frame++)
                 {
                     int src0 = (int)SourceFramePosition;
@@ -132,14 +138,13 @@ namespace SapCrossfadeAudio.Runtime.Core.Generators.Clip
                         float x1  = ClipDataInterleaved[index: base1 + ch];
                         float x2  = ClipDataInterleaved[index: base2 + ch];
 
-                        buffer[channel: ch, frame: frame] =
-                            Resampler.Interp(
-                                q: ResampleQuality,
-                                xm1: xm1,
-                                x0: x0,
-                                x1: x1,
-                                x2: x2,
-                                t: t) * Gain;
+                        buffer[channel: ch, frame: frame] = Resampler.Interp(
+                            q: ResampleQuality,
+                            xm1: xm1,
+                            x0: x0,
+                            x1: x1,
+                            x2: x2,
+                            t: t) * Gain;
                     }
 
                     SourceFramePosition += step;
@@ -147,13 +152,13 @@ namespace SapCrossfadeAudio.Runtime.Core.Generators.Clip
                 }
             }
 
-            // 不足分 0 埋め（安全側）
+            // Zero-fill remaining frames (fail-safe)
             if (writtenFrames < requestedFrames)
             {
                 ZeroFill(buffer: buffer, startFrame: writtenFrames, frameCount: requestedFrames - writtenFrames);
             }
 
-            // Unity 公式例同様「書き込んだフレーム数」を返す。
+            // Return written frame count (per Unity official examples)
             return writtenFrames;
         }
 
@@ -199,6 +204,9 @@ namespace SapCrossfadeAudio.Runtime.Core.Generators.Clip
         }
     }
 
+    /// <summary>
+    /// Control-side state for ClipGenerator. Handles configuration and resource cleanup.
+    /// </summary>
     internal readonly struct ClipGeneratorControl : GeneratorInstance.IControl<ClipGeneratorRealtime>
     {
         private readonly bool _loop;
@@ -265,7 +273,7 @@ namespace SapCrossfadeAudio.Runtime.Core.Generators.Clip
                 AudioSpeakerMode.Surround => 5,
                 AudioSpeakerMode.Mode5point1 => 6,
                 AudioSpeakerMode.Mode7point1 => 8,
-                _ => 2
+                _ => DefaultChannelCount
             };
         }
     }

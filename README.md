@@ -98,18 +98,18 @@ player.CrossfadeToB(duration: 2f, CrossfadeCurve.EqualPower);
 
 ## Installation
 
-### Option 1: Git URL（推奨）
+### Manual Installation (Recommended)
 
-Unity Package Manager で以下の URL を追加:
+1. Clone or download this repository
+2. Copy the `Assets/Plugins/unity-sap-crossfade-audio` folder to your project
+
+### Git URL (Alternative)
+
+Add via Unity Package Manager:
 
 ```
 https://github.com/tomoludens/unity-sap-crossfade-audio.git?path=Assets/Plugins/unity-sap-crossfade-audio
 ```
-
-### Option 2: Manual
-
-1. リポジトリをクローンまたはダウンロード
-2. `Assets/Plugins/unity-sap-crossfade-audio` フォルダをプロジェクトにコピー
 
 ---
 
@@ -509,22 +509,32 @@ SapCrossfadeAudio/
 
 ## Testing
 
-### テストの実行
+### Running Tests
 
-**Unity Editor で実行**:
-1. Window > General > Test Runner を開く
-2. EditMode または PlayMode タブを選択
-3. "Run All" をクリック、または特定のテストを選択
+**In Unity Editor**:
+1. Open Window > General > Test Runner
+2. Select EditMode or PlayMode tab
+3. Click "Run All" or select specific tests
 
-**テストカバレッジ**:
-- EditMode: NativeBufferPool, Resampler, CrossfadeCommand
-- PlayMode: CrossfadeHandle, CrossfadePlayer 統合
+### Test Coverage
 
-### CI/CD
+| Category | Test Class | Coverage |
+|----------|------------|----------|
+| **EditMode** | `NativeBufferPoolTests` | Rent/Return, pool limits, idempotency |
+| **EditMode** | `ResamplerTests` | Nearest/Linear/Hermite4 interpolation accuracy |
+| **EditMode** | `CrossfadeCommandTests` | Command creation, field validation |
+| **PlayMode** | `CrossfadeHandleTests` | Command dispatch, IsValid checks |
+| **PlayMode** | `CrossfadePlayerTests` | MonoBehaviour integration, playback control |
 
-GitHub Actions でテストが自動実行されます:
-- `test.yml` - push/PR 時に EditMode/PlayMode テストを実行
-- `release.yml` - タグ push 時にリリースを作成
+### Running Tests via Command Line
+
+```bash
+# EditMode tests
+Unity.exe -runTests -batchmode -projectPath . -testPlatform EditMode -testResults results.xml
+
+# PlayMode tests  
+Unity.exe -runTests -batchmode -projectPath . -testPlatform PlayMode -testResults results.xml
+```
 
 ---
 

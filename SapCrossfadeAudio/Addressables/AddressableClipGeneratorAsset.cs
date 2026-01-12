@@ -16,21 +16,20 @@ using static UnityEngine.Audio.ProcessorInstance;
 namespace SapCrossfadeAudio.Addressables
 {
     /// <summary>
-    /// Addressables を使用した AudioClip ジェネレーター。
-    /// AssetReference による遅延ロードと明示的なリソース管理を提供する。
+    /// AudioClip generator using Addressables for lazy loading with explicit resource management.
     /// </summary>
     /// <remarks>
-    /// 所有権ポリシー:
-    /// - このアセットが AssetReference を所有し、ロード/解放の責務を持つ
-    /// - Release() は冪等（何度呼んでも安全）
-    /// - 外部ローダーと併用する場合は、責務の明確化が必要
+    /// Ownership policy:
+    /// - This asset owns the AssetReference and is responsible for load/release
+    /// - Release() is idempotent (safe to call multiple times)
+    /// - When used with external loaders, clarify ownership responsibilities
     /// </remarks>
     [CreateAssetMenu(fileName = "AddressableClipGenerator", menuName = "SapCrossfadeAudio/Generators/AddressableClipGenerator", order = 15)]
     public sealed class AddressableClipGeneratorAsset : ScriptableObject, IAudioGenerator, IPreloadableAudioGenerator
     {
         [Header("Addressable Reference")]
         [SerializeField]
-        [Tooltip("ロードする AudioClip の AssetReference")]
+        [Tooltip("AssetReference for the AudioClip to load")]
         private AssetReferenceT<AudioClip> _clipReference;
 
         [Header("Playback Settings")]
@@ -48,7 +47,7 @@ namespace SapCrossfadeAudio.Addressables
         [SerializeField]
         private ResampleQuality _resampleQuality = ResampleQuality.Linear;
 
-        // 内部状態
+        // Internal state
         private AsyncOperationHandle<AudioClip> _handle;
         private AudioClip _loadedClip;
         private NativeArray<float> _cachedPcm;
@@ -75,7 +74,7 @@ namespace SapCrossfadeAudio.Addressables
                 IsValid = false
             };
 
-            // Preload済みの場合はキャッシュされたPCMを使用
+            // Use cached PCM if preloaded
             if (_isReady && _cachedPcm.IsCreated && _cachedPcm.Length > 0 && _loadedClip != null)
             {
                 int clipFrames = _loadedClip.samples;
@@ -88,7 +87,7 @@ namespace SapCrossfadeAudio.Addressables
                 realtime.SourceFramePosition = 0f;
                 realtime.IsValid = true;
             }
-            // Preloadされていない場合は同期ロードを試みる（非推奨だが安全側に倒す）
+            // Fallback: synchronous load if not preloaded (not recommended but fail-safe)
             else if (_clipReference != null && _clipReference.RuntimeKeyIsValid())
             {
                 TryLoadSynchronously(ref realtime);
@@ -114,13 +113,12 @@ namespace SapCrossfadeAudio.Addressables
         #region IPreloadableAudioGenerator
 
         /// <summary>
-        /// アセットがロード済みで再生可能な状態かどうか。
+        /// Whether the asset is loaded and ready for playback.
         /// </summary>
         public bool IsReady => _isReady;
 
         /// <summary>
-        /// Addressables からアセットを事前ロードする。
-        /// PCM データのキャッシュまで行い、CreateInstance 時のヒッチを回避する。
+        /// Preloads the asset from Addressables. Caches PCM data to avoid hitches during CreateInstance.
         /// </summary>
         public async Task PreloadAsync()
         {
@@ -130,7 +128,7 @@ namespace SapCrossfadeAudio.Addressables
             if (_clipReference == null || !_clipReference.RuntimeKeyIsValid())
             {
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
-                Debug.LogWarning($"[AddressableClipGenerator] AssetReference が無効です: {name}", this);
+                Debug.LogWarning($"[AddressableClipGenerator] Invalid AssetReference: {name}", this);
 #endif
                 return;
             }
@@ -146,7 +144,7 @@ namespace SapCrossfadeAudio.Addressables
                 {
                     _loadedClip = _handle.Result;
 
-                    // PCM をキャッシュ
+                    // Cache PCM data
                     if (_loadedClip != null && ClipRequirements.CanUseGetData(_loadedClip))
                     {
                         if (ClipRequirements.EnsureLoaded(_loadedClip))
@@ -159,7 +157,7 @@ namespace SapCrossfadeAudio.Addressables
                 else
                 {
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
-                    Debug.LogError($"[AddressableClipGenerator] ロード失敗: {name}", this);
+                    Debug.LogError($"[AddressableClipGenerator] Load failed: {name}", this);
 #endif
                 }
             }
@@ -176,8 +174,7 @@ namespace SapCrossfadeAudio.Addressables
         }
 
         /// <summary>
-        /// ロードしたアセットを解放する。
-        /// このメソッドは冪等（何度呼んでも安全）。
+        /// Releases the loaded asset. This method is idempotent (safe to call multiple times).
         /// </summary>
         public void Release()
         {
@@ -185,14 +182,14 @@ namespace SapCrossfadeAudio.Addressables
             _isLoading = false;
             _loadedClip = null;
 
-            // PCM キャッシュを解放
+            // Release PCM cache
             if (_cachedPcm.IsCreated)
             {
                 _cachedPcm.Dispose();
                 _cachedPcm = default;
             }
 
-            // Addressables ハンドルを解放
+            // Release Addressables handle
             if (_handle.IsValid())
             {
                 Addressables.Release(_handle);
@@ -230,7 +227,7 @@ namespace SapCrossfadeAudio.Addressables
             if (requiredFloats <= 0)
                 return;
 
-            // 既存のキャッシュがあれば解放
+            // Dispose existing cache if present
             if (_cachedPcm.IsCreated)
             {
                 _cachedPcm.Dispose();
@@ -242,7 +239,7 @@ namespace SapCrossfadeAudio.Addressables
 
         private void TryLoadSynchronously(ref ClipGeneratorRealtime realtime)
         {
-            // 同期ロードは非推奨だが、Preload されていない場合のフォールバック
+            // Sync load is discouraged but serves as fallback when not preloaded
             try
             {
                 var syncHandle = Addressables.LoadAssetAsync<AudioClip>(_clipReference);
@@ -276,7 +273,7 @@ namespace SapCrossfadeAudio.Addressables
                     }
                 }
 
-                // 同期ロードの場合、ハンドルを保持しておく
+                // Keep handle for sync-loaded assets
                 _handle = syncHandle;
                 _loadedClip = clip;
             }

@@ -10,31 +10,30 @@ using SapCrossfadeAudio.Runtime.Core;
 namespace SapCrossfadeAudio.Runtime.Core.Components
 {
     /// <summary>
-    /// CrossfadeGenerator を Inspector から操作するための MonoBehaviour ラッパー。
-    /// AudioSource に Generator を設定し、再生制御とクロスフェード操作を提供する。
+    /// MonoBehaviour wrapper for controlling CrossfadeGenerator from Inspector.
+    /// Manages AudioSource setup and provides crossfade operations.
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(requiredComponent: typeof(AudioSource))]
     public sealed class CrossfadePlayer : MonoBehaviour
     {
         [Header(header: "Generator")]
-        [SerializeField] [Tooltip(tooltip: "CrossfadeGeneratorAsset を設定してください")]
+        [SerializeField] [Tooltip(tooltip: "Assign a CrossfadeGeneratorAsset")]
         private CrossfadeGeneratorAsset generator;
 
         [Header(header: "Playback")]
-        [SerializeField] [Tooltip(tooltip: "有効にすると Start() で自動再生します")]
+        [SerializeField] [Tooltip(tooltip: "Auto-play on Start()")]
         private bool playOnStart = true;
 
         private AudioSource _audioSource;
 
         /// <summary>
-        /// 現在の generatorInstance への操作ハンドル。
-        /// AudioSource が再生中でない場合、IsValid が false になる。
+        /// Handle for the current generatorInstance. IsValid is false when AudioSource is not playing.
         /// </summary>
         public CrossfadeHandle Handle => CrossfadeHandle.FromAudioSource(source: _audioSource);
 
         /// <summary>
-        /// 設定されている Generator アセット。
+        /// The assigned Generator asset.
         /// </summary>
         public CrossfadeGeneratorAsset Generator
         {
@@ -43,12 +42,12 @@ namespace SapCrossfadeAudio.Runtime.Core.Components
         }
 
         /// <summary>
-        /// 内部の AudioSource への参照。
+        /// Reference to the internal AudioSource.
         /// </summary>
         public AudioSource AudioSource => _audioSource;
 
         /// <summary>
-        /// 現在再生中かどうか。
+        /// Whether audio is currently playing.
         /// </summary>
         public bool IsPlaying => _audioSource != null && _audioSource.isPlaying;
 
@@ -66,7 +65,7 @@ namespace SapCrossfadeAudio.Runtime.Core.Components
         }
 
         /// <summary>
-        /// Generator を設定して再生を開始する。
+        /// Sets the generator and starts playback.
         /// </summary>
         public void Play()
         {
@@ -81,7 +80,7 @@ namespace SapCrossfadeAudio.Runtime.Core.Components
         }
 
         /// <summary>
-        /// 再生を停止する。
+        /// Stops playback.
         /// </summary>
         public void Stop()
         {
@@ -92,10 +91,10 @@ namespace SapCrossfadeAudio.Runtime.Core.Components
         }
 
         /// <summary>
-        /// Source A へクロスフェードする。
+        /// Crossfades to Source A.
         /// </summary>
-        /// <param name="durationSeconds">フェード時間（秒）</param>
-        /// <param name="curve">フェードカーブ（デフォルト: EqualPower）</param>
+        /// <param name="durationSeconds">Fade duration in seconds</param>
+        /// <param name="curve">Fade curve (default: EqualPower)</param>
         public void CrossfadeToA(float durationSeconds, CrossfadeCurve curve = CrossfadeCurve.EqualPower)
         {
             var handle = Handle;
@@ -109,10 +108,10 @@ namespace SapCrossfadeAudio.Runtime.Core.Components
         }
 
         /// <summary>
-        /// Source B へクロスフェードする。
+        /// Crossfades to Source B.
         /// </summary>
-        /// <param name="durationSeconds">フェード時間（秒）</param>
-        /// <param name="curve">フェードカーブ（デフォルト: EqualPower）</param>
+        /// <param name="durationSeconds">Fade duration in seconds</param>
+        /// <param name="curve">Fade curve (default: EqualPower)</param>
         public void CrossfadeToB(float durationSeconds, CrossfadeCurve curve = CrossfadeCurve.EqualPower)
         {
             var handle = Handle;
@@ -126,11 +125,11 @@ namespace SapCrossfadeAudio.Runtime.Core.Components
         }
 
         /// <summary>
-        /// 指定位置へクロスフェードする。
+        /// Crossfades to a specified position.
         /// </summary>
-        /// <param name="targetPosition01">ターゲット位置 (0.0 = A, 1.0 = B)</param>
-        /// <param name="durationSeconds">フェード時間（秒）</param>
-        /// <param name="curve">フェードカーブ（デフォルト: EqualPower）</param>
+        /// <param name="targetPosition01">Target position (0.0 = A, 1.0 = B)</param>
+        /// <param name="durationSeconds">Fade duration in seconds</param>
+        /// <param name="curve">Fade curve (default: EqualPower)</param>
         public void Crossfade(float targetPosition01, float durationSeconds, CrossfadeCurve curve = CrossfadeCurve.EqualPower)
         {
             var handle = Handle;
@@ -144,9 +143,9 @@ namespace SapCrossfadeAudio.Runtime.Core.Components
         }
 
         /// <summary>
-        /// 指定位置へ即座に切り替える（フェードなし）。
+        /// Instantly sets position without fading.
         /// </summary>
-        /// <param name="position01">位置 (0.0 = A, 1.0 = B)</param>
+        /// <param name="position01">Position (0.0 = A, 1.0 = B)</param>
         public void SetImmediate(float position01)
         {
             var handle = Handle;

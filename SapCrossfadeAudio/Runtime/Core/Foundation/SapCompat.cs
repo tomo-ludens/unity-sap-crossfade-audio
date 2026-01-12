@@ -23,6 +23,6 @@ namespace SapCrossfadeAudio.Runtime.Core.Foundation
         /// </summary>
         [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
         public static bool IsExhausted(in GeneratorInstance.Result result)
-            => result.processedFrames <= 0;
+            => (result.processedFrames <= 0);
     }
 }
