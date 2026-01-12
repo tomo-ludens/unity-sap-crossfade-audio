@@ -1,15 +1,39 @@
 using System.Collections.Generic;
 using Unity.Collections;
+using UnityEngine;
 
 namespace SapCrossfadeAudio.Runtime.Core.Foundation
 {
     /// <summary>
     /// Simple NativeArray pool for Control-side only. Reduces alloc/free overhead during frequent Reconfigure.
     /// </summary>
-    internal static class NativeBufferPool
+    public static class NativeBufferPool
     {
         private const int MaxPerSize = 8;
         private const long MaxTotalFloats = 8L * 1024L * 1024L; // 8M floats ≈ 32MB
+
+        private static bool _sQuittingHooked;
+
+        [RuntimeInitializeOnLoadMethod(loadType: RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void OnSubsystemRegistration()
+        {
+            Clear();
+            EnsureQuittingHook();
+        }
+
+        [RuntimeInitializeOnLoadMethod(loadType: RuntimeInitializeLoadType.AfterAssembliesLoaded)]
+        private static void AfterAssembliesLoaded()
+        {
+            EnsureQuittingHook();
+        }
+
+        private static void EnsureQuittingHook()
+        {
+            if (_sQuittingHooked) return;
+
+            _sQuittingHooked = true;
+            Application.quitting += Clear;
+        }
 
         // Tracks total pooled floats (returned and reusable). Increments/decrements on Rent/Return.
         private static long _sTotalPooledFloats;
