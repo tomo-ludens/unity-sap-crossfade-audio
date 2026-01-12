@@ -1,14 +1,13 @@
 using NUnit.Framework;
 using UnityEngine;
-
 using SapCrossfadeAudio.Runtime.Core.Components;
 using SapCrossfadeAudio.Runtime.Core.Types;
 
 namespace SapCrossfadeAudio.Tests.Runtime
 {
     /// <summary>
-    /// CrossfadePlayer の PlayMode テスト。
-    /// MonoBehaviour 統合と再生制御を検証する。
+    /// PlayMode tests for CrossfadePlayer.
+    /// Verifies MonoBehaviour integration and playback control.
     /// </summary>
     [TestFixture]
     public class CrossfadePlayerTests
@@ -23,7 +22,7 @@ namespace SapCrossfadeAudio.Tests.Runtime
             _testObject = new GameObject(name: "TestCrossfadePlayer");
             _audioSource = _testObject.AddComponent<AudioSource>();
             _audioSource.playOnAwake = false;
-            _audioSource.Stop(); // playOnAwake=true (default) で Awake 時に再生開始される可能性があるため明示的に停止
+            _audioSource.Stop(); // Explicitly stop in case playOnAwake (default true) started playback
             _player = _testObject.AddComponent<CrossfadePlayer>();
         }
 

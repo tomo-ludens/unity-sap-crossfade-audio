@@ -1,11 +1,7 @@
 using UnityEngine;
-
 using SapCrossfadeAudio.Runtime.Core.Generators.Crossfade;
 using SapCrossfadeAudio.Runtime.Core.Integration;
 using SapCrossfadeAudio.Runtime.Core.Types;
-
-// ReSharper disable once RedundantUsingDirective
-using SapCrossfadeAudio.Runtime.Core;
 
 namespace SapCrossfadeAudio.Runtime.Core.Components
 {
@@ -25,12 +21,10 @@ namespace SapCrossfadeAudio.Runtime.Core.Components
         [SerializeField] [Tooltip(tooltip: "Auto-play on Start()")]
         private bool playOnStart = true;
 
-        private AudioSource _audioSource;
-
         /// <summary>
         /// Handle for the current generatorInstance. IsValid is false when AudioSource is not playing.
         /// </summary>
-        public CrossfadeHandle Handle => CrossfadeHandle.FromAudioSource(source: _audioSource);
+        public CrossfadeHandle Handle => CrossfadeHandle.FromAudioSource(source: AudioSource);
 
         /// <summary>
         /// The assigned Generator asset.
@@ -44,16 +38,16 @@ namespace SapCrossfadeAudio.Runtime.Core.Components
         /// <summary>
         /// Reference to the internal AudioSource.
         /// </summary>
-        public AudioSource AudioSource => _audioSource;
+        public AudioSource AudioSource { get; private set; }
 
         /// <summary>
         /// Whether audio is currently playing.
         /// </summary>
-        public bool IsPlaying => _audioSource != null && _audioSource.isPlaying;
+        public bool IsPlaying => AudioSource != null && AudioSource.isPlaying;
 
         private void Awake()
         {
-            _audioSource = GetComponent<AudioSource>();
+            AudioSource = GetComponent<AudioSource>();
         }
 
         private void Start()
@@ -69,14 +63,14 @@ namespace SapCrossfadeAudio.Runtime.Core.Components
         /// </summary>
         public void Play()
         {
-            if (_audioSource == null || generator == null)
+            if (AudioSource == null || generator == null)
             {
                 CrossfadeLogger.LogWarning<CrossfadePlayer>(message: "AudioSource or Generator is not set.", context: this);
                 return;
             }
 
-            _audioSource.generator = generator;
-            _audioSource.Play();
+            AudioSource.generator = generator;
+            AudioSource.Play();
         }
 
         /// <summary>
@@ -84,9 +78,9 @@ namespace SapCrossfadeAudio.Runtime.Core.Components
         /// </summary>
         public void Stop()
         {
-            if (_audioSource != null)
+            if (AudioSource != null)
             {
-                _audioSource.Stop();
+                AudioSource.Stop();
             }
         }
 

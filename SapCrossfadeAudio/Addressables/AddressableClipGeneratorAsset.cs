@@ -1,16 +1,14 @@
+using System.Threading;
 using System.Threading.Tasks;
-
 using Unity.Collections;
 using Unity.IntegerTime;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.Audio;
 using UnityEngine.ResourceManagement.AsyncOperations;
-
 using SapCrossfadeAudio.Runtime.Core.Foundation;
 using SapCrossfadeAudio.Runtime.Core.Foundation.Resampling;
 using SapCrossfadeAudio.Runtime.Core.Generators.Clip;
-
 using static UnityEngine.Audio.ProcessorInstance;
 
 namespace SapCrossfadeAudio.Addressables
@@ -47,12 +45,12 @@ namespace SapCrossfadeAudio.Addressables
         [SerializeField]
         private ResampleQuality _resampleQuality = ResampleQuality.Linear;
 
-        // Internal state
+        // Internal state (volatile for safe cross-context reads in async workflows)
         private AsyncOperationHandle<AudioClip> _handle;
         private AudioClip _loadedClip;
         private NativeArray<float> _cachedPcm;
-        private bool _isLoading;
-        private bool _isReady;
+        private volatile bool _isLoading;
+        private volatile bool _isReady;
 
         #region IAudioGenerator
 

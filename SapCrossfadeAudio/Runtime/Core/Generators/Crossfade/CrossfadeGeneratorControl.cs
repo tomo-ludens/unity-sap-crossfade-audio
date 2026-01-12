@@ -1,12 +1,9 @@
 using System.Runtime.CompilerServices;
-
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.Audio;
-
 using SapCrossfadeAudio.Runtime.Core.Foundation;
 using SapCrossfadeAudio.Runtime.Core.Types;
-
 using static UnityEngine.Audio.ProcessorInstance;
 
 namespace SapCrossfadeAudio.Runtime.Core.Generators.Crossfade

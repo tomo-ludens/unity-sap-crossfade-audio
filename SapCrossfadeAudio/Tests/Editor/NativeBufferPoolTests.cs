@@ -1,14 +1,13 @@
 using NUnit.Framework;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
-
 using SapCrossfadeAudio.Runtime.Core.Foundation;
 
 namespace SapCrossfadeAudio.Tests.Editor
 {
     /// <summary>
-    /// NativeBufferPool の EditMode テスト。
-    /// Rent/Return/Clear の基本動作、上限管理、冪等性を検証する。
+    /// EditMode tests for NativeBufferPool.
+    /// Verifies Rent/Return/Clear operations, capacity limits, and idempotency.
     /// </summary>
     [TestFixture]
     public class NativeBufferPoolTests
@@ -16,14 +15,14 @@ namespace SapCrossfadeAudio.Tests.Editor
         [SetUp]
         public void SetUp()
         {
-            // 各テスト前にプールをクリア
+            // Clear pool before each test
             NativeBufferPool.Clear();
         }
 
         [TearDown]
         public void TearDown()
         {
-            // 各テスト後にプールをクリア（メモリリーク防止）
+            // Clear pool after each test (prevent memory leaks)
             NativeBufferPool.Clear();
         }
 
@@ -78,9 +77,9 @@ namespace SapCrossfadeAudio.Tests.Editor
             var reusedPtr = (System.IntPtr)reused.GetUnsafePtr();
 
             // Assert
-            Assert.IsFalse(condition: original.IsCreated); // Return後はdefaultに
+            Assert.IsFalse(condition: original.IsCreated); // Becomes default after Return
             Assert.IsTrue(condition: reused.IsCreated);
-            Assert.AreEqual(expected: originalPtr, actual: reusedPtr); // 同じバッファが再利用される
+            Assert.AreEqual(expected: originalPtr, actual: reusedPtr); // Same buffer is reused
 
             // Cleanup
             NativeBufferPool.Return(array: ref reused);

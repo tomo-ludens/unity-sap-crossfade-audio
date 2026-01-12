@@ -1,12 +1,11 @@
 using NUnit.Framework;
-
 using SapCrossfadeAudio.Runtime.Core.Foundation.Resampling;
 
 namespace SapCrossfadeAudio.Tests.Editor
 {
     /// <summary>
-    /// Resampler の EditMode テスト。
-    /// 各品質レベル（Nearest/Linear/Hermite4）の補間精度を検証する。
+    /// EditMode tests for Resampler.
+    /// Verifies interpolation accuracy for each quality level (Nearest/Linear/Hermite4).
     /// </summary>
     [TestFixture]
     public class ResamplerTests

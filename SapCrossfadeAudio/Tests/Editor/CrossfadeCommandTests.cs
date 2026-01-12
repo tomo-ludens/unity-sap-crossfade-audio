@@ -1,12 +1,11 @@
 using NUnit.Framework;
-
 using SapCrossfadeAudio.Runtime.Core.Types;
 
 namespace SapCrossfadeAudio.Tests.Editor
 {
     /// <summary>
-    /// CrossfadeCommand 構造体の EditMode テスト。
-    /// Create メソッドと各フィールドの値を検証する。
+    /// EditMode tests for CrossfadeCommand struct.
+    /// Verifies Create method and field values.
     /// </summary>
     [TestFixture]
     public class CrossfadeCommandTests

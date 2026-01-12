@@ -1,15 +1,14 @@
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.Audio;
-
 using SapCrossfadeAudio.Runtime.Core.Integration;
 using SapCrossfadeAudio.Runtime.Core.Types;
 
 namespace SapCrossfadeAudio.Tests.Runtime
 {
     /// <summary>
-    /// CrossfadeHandle の PlayMode テスト。
-    /// コマンド送信と IsValid 判定を検証する。
+    /// PlayMode tests for CrossfadeHandle.
+    /// Verifies command dispatch and IsValid checks.
     /// </summary>
     [TestFixture]
     public class CrossfadeHandleTests

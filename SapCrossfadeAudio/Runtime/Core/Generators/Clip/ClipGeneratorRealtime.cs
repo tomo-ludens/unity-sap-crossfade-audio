@@ -1,12 +1,9 @@
 using System.Runtime.CompilerServices;
-
 using Unity.Burst;
 using Unity.Collections;
 using Unity.IntegerTime;
 using UnityEngine.Audio;
-
 using SapCrossfadeAudio.Runtime.Core.Foundation.Resampling;
-
 using static UnityEngine.Audio.ProcessorInstance;
 
 namespace SapCrossfadeAudio.Runtime.Core.Generators.Clip
