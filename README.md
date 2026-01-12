@@ -1,5 +1,5 @@
 <p align="center">
-  <h1 align="center">🎵 CrossfadeAudio</h1>
+  <h1 align="center">🎵 SapCrossfadeAudio</h1>
   <p align="center">
     <strong>Sample-accurate crossfade library for Unity 6.3+ Scriptable Audio Pipeline</strong>
   </p>
@@ -9,7 +9,7 @@
     <a href="#quick-start">Quick Start</a> •
     <a href="#api-reference">API</a> •
     <a href="#architecture">Architecture</a> •
-    <a href="Docs/CrossfadeAudio_DesignDocument_v1.1.0_Unity6.3_APIAligned.md">Design Doc</a>
+    <a href="Docs/SapCrossfadeAudio_DesignDocument_v1.1.0_Unity6.3_APIAligned.md">Design Doc</a>
   </p>
 </p>
 
@@ -24,7 +24,7 @@
 
 ## Overview
 
-**CrossfadeAudio** は Unity 6.3+ の Scriptable Audio Pipeline（SAP）を活用した、**サンプル精度のクロスフェード再生**を実現する専用ライブラリです。
+**SapCrossfadeAudio** は Unity 6.3+ の Scriptable Audio Pipeline（SAP）を活用した、**サンプル精度のクロスフェード再生**を実現する専用ライブラリです。
 
 BGM 遷移などのシーンで、**例外ゼロ**・**アロケーションフリー**な安定したリアルタイムオーディオ処理を提供します。
 
@@ -118,7 +118,7 @@ https://github.com/tomoludens/unity-sap-crossfade-audio.git?path=Assets/Plugins/
 ### Step 1: Generator Assets の作成
 
 1. **Project ウィンドウで右クリック**
-2. **Create > TomoLudens > CrossfadeAudio > Generators** から作成
+2. **Create > TomoLudens > SapCrossfadeAudio > Generators** から作成
 
 ```
 ClipGenerator (Source A) ─┐
@@ -143,7 +143,7 @@ void Start()
 ### Step 3: クロスフェード実行
 
 ```csharp
-using TomoLudens.CrossfadeAudio.Runtime.Core.Types;
+using SapCrossfadeAudio.Runtime.Core.Types;
 using UnityEngine.Audio;
 
 // CrossfadeCommand を送信
@@ -164,7 +164,7 @@ ControlContext.builtIn.SendMessage(audioSource.generatorInstance, ref command);
 
 ```csharp
 using UnityEngine;
-using TomoLudens.CrossfadeAudio.Runtime.Core.Types;
+using SapCrossfadeAudio.Runtime.Core.Types;
 using UnityEngine.Audio;
 
 public class BgmController : MonoBehaviour
@@ -222,8 +222,8 @@ CrossfadeCurve.SCurve      // smoothstep 補間
 
 ```csharp
 using UnityEngine;
-using TomoLudens.CrossfadeAudio.Runtime.Core.Components;
-using TomoLudens.CrossfadeAudio.Runtime.Core.Types;
+using SapCrossfadeAudio.Runtime.Core.Components;
+using SapCrossfadeAudio.Runtime.Core.Types;
 
 public class BgmManager : MonoBehaviour
 {
@@ -251,8 +251,8 @@ public class BgmManager : MonoBehaviour
 DI やステートマシンから制御する場合は CrossfadeHandle を使用します。
 
 ```csharp
-using TomoLudens.CrossfadeAudio.Runtime.Core.Integration;
-using TomoLudens.CrossfadeAudio.Runtime.Core.Types;
+using SapCrossfadeAudio.Runtime.Core.Integration;
+using SapCrossfadeAudio.Runtime.Core.Types;
 
 public class AudioService
 {
@@ -278,7 +278,7 @@ public class AudioService
 Addressables を使用する場合は、事前ロードでヒッチを回避できます。
 
 ```csharp
-using TomoLudens.CrossfadeAudio.Addressables;
+using SapCrossfadeAudio.Addressables;
 
 public class AddressableBgmManager : MonoBehaviour
 {
@@ -479,10 +479,10 @@ Asset (SO)  ──CreateInstance()──►  GeneratorInstance
 ## Project Structure
 
 ```
-CrossfadeAudio/
+SapCrossfadeAudio/
 ├── Runtime/
 │   └── Core/
-│       ├── CrossfadeAudio.Core.asmdef    # 外部依存なし
+│       ├── SapCrossfadeAudio.Core.asmdef  # 外部依存なし
 │       ├── Foundation/
 │       │   ├── SapCompat.cs              # SAP 境界隔離
 │       │   ├── NativeBufferPool.cs       # メモリプーリング

@@ -1,4 +1,5 @@
 using NUnit.Framework;
+
 using SapCrossfadeAudio.Runtime.Core.Foundation.Resampling;
 
 namespace SapCrossfadeAudio.Tests.Editor

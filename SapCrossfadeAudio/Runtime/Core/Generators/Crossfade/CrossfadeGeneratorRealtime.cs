@@ -1,9 +1,11 @@
 using System.Runtime.CompilerServices;
+
 using Unity.Burst;
 using Unity.Collections;
 using Unity.IntegerTime;
 using Unity.Mathematics;
 using UnityEngine.Audio;
+
 using SapCrossfadeAudio.Runtime.Core.Foundation;
 using SapCrossfadeAudio.Runtime.Core.Types;
 

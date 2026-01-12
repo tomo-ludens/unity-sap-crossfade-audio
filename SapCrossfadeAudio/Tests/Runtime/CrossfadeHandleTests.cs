@@ -1,8 +1,9 @@
 using NUnit.Framework;
-using SapCrossfadeAudio.Runtime.Core.Integration;
-using SapCrossfadeAudio.Runtime.Core.Types;
 using UnityEngine;
 using UnityEngine.Audio;
+
+using SapCrossfadeAudio.Runtime.Core.Integration;
+using SapCrossfadeAudio.Runtime.Core.Types;
 
 namespace SapCrossfadeAudio.Tests.Runtime
 {

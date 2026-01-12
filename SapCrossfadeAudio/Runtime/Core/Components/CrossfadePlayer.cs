@@ -1,7 +1,8 @@
 using UnityEngine;
+
+using SapCrossfadeAudio.Runtime.Core.Generators.Crossfade;
 using SapCrossfadeAudio.Runtime.Core.Integration;
 using SapCrossfadeAudio.Runtime.Core.Types;
-using SapCrossfadeAudio.Runtime.Core.Generators.Crossfade;
 
 // ReSharper disable once RedundantUsingDirective
 using SapCrossfadeAudio.Runtime.Core;

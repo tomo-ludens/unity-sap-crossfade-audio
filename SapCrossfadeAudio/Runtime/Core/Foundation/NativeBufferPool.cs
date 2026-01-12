@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+
 using Unity.Collections;
 
 namespace SapCrossfadeAudio.Runtime.Core.Foundation

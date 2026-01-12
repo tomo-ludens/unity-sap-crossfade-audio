@@ -1,14 +1,17 @@
 using System.Threading.Tasks;
+
 using Unity.Collections;
 using Unity.IntegerTime;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.Audio;
 using UnityEngine.ResourceManagement.AsyncOperations;
+
+using SapCrossfadeAudio.Runtime.Core.Foundation;
+using SapCrossfadeAudio.Runtime.Core.Foundation.Resampling;
+using SapCrossfadeAudio.Runtime.Core.Generators.Clip;
+
 using static UnityEngine.Audio.ProcessorInstance;
-using CrossfadeAudio.Runtime.Core.Foundation;
-using CrossfadeAudio.Runtime.Core.Foundation.Resampling;
-using CrossfadeAudio.Runtime.Core.Generators.Clip;
 
 namespace SapCrossfadeAudio.Addressables
 {
@@ -22,7 +25,7 @@ namespace SapCrossfadeAudio.Addressables
     /// - Release() は冪等（何度呼んでも安全）
     /// - 外部ローダーと併用する場合は、責務の明確化が必要
     /// </remarks>
-    [CreateAssetMenu(fileName = "AddressableClipGenerator", menuName = "TomoLudens/CrossfadeAudio/Generators/AddressableClipGenerator", order = 15)]
+    [CreateAssetMenu(fileName = "AddressableClipGenerator", menuName = "TomoLudens/SapCrossfadeAudio/Generators/AddressableClipGenerator", order = 15)]
     public sealed class AddressableClipGeneratorAsset : ScriptableObject, IAudioGenerator, IPreloadableAudioGenerator
     {
         [Header("Addressable Reference")]

@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+
 using UnityEngine.Audio;
 
 namespace SapCrossfadeAudio.Runtime.Core.Foundation

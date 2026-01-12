@@ -1,7 +1,8 @@
 using NUnit.Framework;
-using SapCrossfadeAudio.Runtime.Core.Foundation;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
+
+using SapCrossfadeAudio.Runtime.Core.Foundation;
 
 namespace SapCrossfadeAudio.Tests.Editor
 {
