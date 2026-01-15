@@ -307,6 +307,26 @@ public enum CrossfadeCurve
 }
 ```
 
+### ClipGeneratorAsset
+
+AudioClip 再生用の Generator。
+
+| フィールド（Inspector） | 型 | 説明 |
+|-------------------------|----|------|
+| `clip` | `AudioClip` | 再生対象の AudioClip |
+| `gain` | `float` | 再生ゲイン |
+| `loop` | `bool` | ループ再生 |
+| `resampleMode` | `ResampleMode` | サンプルレート不一致時の挙動 |
+| `resampleQuality` | `ResampleQuality` | リサンプル補間品質 |
+
+**ResampleMode** の動作:
+- `Auto`: サンプルレート不一致時のみリサンプル
+- `Force`: 常にリサンプル
+- `Off`: 不一致時は無音を出力（安全側）
+
+**ResampleQuality**:
+- `Nearest` / `Linear` / `Hermite4`
+
 ### CrossfadeGeneratorAsset
 
 | プロパティ | 型 | 説明 |
@@ -429,8 +449,13 @@ Asset (SO)  ──CreateInstance()──►  GeneratorInstance
 | LoadType | GetData | 備考 |
 |----------|---------|------|
 | **DecompressOnLoad** | ✅ | 推奨 |
-| CompressedInMemory | ⚠️ | 動作する場合あり |
+| CompressedInMemory | ❌ | 本ライブラリでは非対応（GetData の安定動作を優先し DecompressOnLoad のみ許可） |
 | Streaming | ❌ | **動作しない**（Unity 仕様） |
+
+### リサンプリングとチャンネル数
+
+- **サンプルレート不一致**: `ResampleMode = Off` の場合は無音を出力
+- **チャンネル数不一致**: 現状は無音を出力（将来的に up/down-mix 対応を検討）
 
 ### Thread Safety
 
@@ -509,6 +534,8 @@ SapCrossfadeAudio/
         └── SapCrossfadeAudio.Tests.Runtime.asmdef
 ```
 
+`IPcmPageProvider` / `PageReady` / `CrossfadeRealtimeParams` は将来のストリーミング拡張用の型で、現状は未使用です。
+
 ---
 
 ## Testing
@@ -536,7 +563,7 @@ SapCrossfadeAudio/
 # EditMode tests
 Unity.exe -runTests -batchmode -projectPath . -testPlatform EditMode -testResults results.xml
 
-# PlayMode tests  
+# PlayMode tests
 Unity.exe -runTests -batchmode -projectPath . -testPlatform PlayMode -testResults results.xml
 ```
 

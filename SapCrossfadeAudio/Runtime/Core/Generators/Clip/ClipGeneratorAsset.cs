@@ -32,7 +32,7 @@ namespace SapCrossfadeAudio.Runtime.Core.Generators.Clip
             set => resampleMode = value;
         }
 
-        public ResampleQuality EesampleQuality
+        public ResampleQuality ResampleQuality
         {
             get => resampleQuality;
             set => resampleQuality = value;

@@ -147,8 +147,19 @@ CrossfadeLogger.LogWarning<MyType>("Message", context: this);
 | LoadType | GetData() | Usability |
 |----------|-----------|-----------|
 | **DecompressOnLoad** | ✅ Works | **Recommended** |
-| CompressedInMemory | ⚠️ Sometimes | Unity version dependent |
+| CompressedInMemory | ❌ Not supported | This library currently requires DecompressOnLoad |
 | Streaming | ❌ Fails | Cannot use `GetData()` |
+
+### Resampling and Channel Mismatch
+
+- `ResampleMode.Off` + sample rate mismatch → output silence (fail-safe)
+- `ResampleMode.Auto` → resample only on mismatch
+- `ResampleMode.Force` → always resample
+- Channel count mismatch → output silence (future: up/down-mix)
+
+### Reserved Types (Not Used Yet)
+
+`IPcmPageProvider`, `PageReady`, `CrossfadeRealtimeParams` are reserved for future streaming support and currently unused.
 
 ### Burst Compilation
 
