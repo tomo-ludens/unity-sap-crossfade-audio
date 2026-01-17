@@ -36,7 +36,7 @@ namespace SapCrossfadeAudio.Runtime.Core.Integration
         /// <param name="targetPosition01">Target position (0.0 = SourceA, 1.0 = SourceB)</param>
         /// <param name="durationSeconds">Fade duration in seconds</param>
         /// <param name="curve">Fade curve</param>
-        /// <returns>True if command was sent successfully</returns>
+        /// <returns>True if command was handled</returns>
         [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
         public bool TryCrossfade(float targetPosition01, float durationSeconds, CrossfadeCurve curve)
         {
@@ -49,8 +49,8 @@ namespace SapCrossfadeAudio.Runtime.Core.Integration
                 curve: curve
             );
 
-            ControlContext.builtIn.SendMessage(processorInstance: _instance, message: ref command);
-            return true;
+            var response = ControlContext.builtIn.SendMessage(processorInstance: _instance, message: ref command);
+            return response == ProcessorInstance.Response.Handled;
         }
 
         /// <summary>
